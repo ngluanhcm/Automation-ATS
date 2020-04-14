@@ -6,7 +6,7 @@ use warnings;
       
 use Log::Log4perl qw(get_logger :levels);
 
-use QATEST::C20_EO::Luan::SHAKEN19::SHAKEN19; 
+use QATEST::C20_EO::Luan::Automation-ATS::SHAKEN19::SHAKEN19; 
 
 #####################################
 # TESTS
@@ -36,8 +36,8 @@ print "************  EMAIL_LIST ==> @emailList\n";
 # EXECUTION OF TESTS
 #####################################
 
-#&QATEST::C20_EO::Luan::SHAKEN19::SHAKEN19::runTests;  ################  For running all tests #########################
+#&QATEST::C20_EO::Luan::Automation-ATS::SHAKEN19::SHAKEN19::runTests;  ################  For running all tests #########################
 
-&QATEST::C20_EO::Luan::SHAKEN19::SHAKEN19::runTests("TC5");  ################  For running selective tests #########################
+&QATEST::C20_EO::Luan::Automation-ATS::SHAKEN19::SHAKEN19::runTests("TC5");  ################  For running selective tests #########################
 
 1;
