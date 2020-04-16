@@ -36,8 +36,8 @@ print "************  EMAIL_LIST ==> @emailList\n";
 # EXECUTION OF TESTS
 #####################################
 
-#&QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19::SHAKEN19::runTests;  ################  For running all tests #########################
+&QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19::SHAKEN19::runTests;  ################  For running all tests #########################
 
-&QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19::SHAKEN19::runTests("TC5");  ################  For running selective tests #########################
+#&QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19::SHAKEN19::runTests("TC5");  ################  For running selective tests #########################
 
 1;
