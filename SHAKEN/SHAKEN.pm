@@ -15487,9 +15487,9 @@ sub TC67 { #Error path_Provisioning STRSHKN in CUSTSTN.
         }
     if (grep /ERROR/, $ses_core->execCmd("add STRSHKN_ENABLED")) {
         $logger->debug(__PACKAGE__ . " $tcid: cannot execute command 'add STRSHKN_ENABLED' ");
-        print FH "STEP: add STRSHKN_ENABLED - Pass\n";
+        print FH "STEP: Cannot add STRSHKN_ENABLED - Pass\n";
     }else{
-        print FH "STEP: add STRSHKN_ENABLED - Fail\n";
+        print FH "STEP: Cannot add STRSHKN_ENABLED - Fail\n";
         $result = 0;
         goto CLEANUP;
     }
