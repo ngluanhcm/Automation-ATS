@@ -57,7 +57,7 @@ if ($dir =~ /home\/(\w\w*)\/ats_repos/ ) {
 
 our ($sec,$min,$hour,$mday,$mon,$year,$wday, $yday,$isdst) = localtime(time);
 our $datestamp = sprintf "%4d%02d%02d-%02d%02d%02d", $year+1900,$mon+1,$mday,$hour,$min,$sec;
-our ($ses_core, $ses_glcas, $ses_logutil,$ses_calltrak, $ses_tapi, $ses_ats);
+our ($ses_core, $ses_glcas, $ses_logutil,$ses_calltrak, $ses_tapi, $ses_ats, $ses_cli1, $ses_cli, $gwc_id);
 our (%input, @output, $tcid);
 our %core_account = ( 
                     -username => [
@@ -84,6 +84,7 @@ our ($root_pass) = $alias_hashref->{LOGIN}->{1}->{ROOTPASSWD};
 
 my $as = SonusQA::Utils::resolve_alias($TESTBED{ "as:1:ce0"});
 my $ip = $as->{MGMTNIF}->{1}->{IP};
+$gwc_id = 13; #GWC gr303
 
 # Line Info
 our %db_line = (
@@ -140,9 +141,9 @@ our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
                 'tms1286680' => ['sip_1','gr303_1'],
                 'tms1286681' => ['sip_1','gr303_1'],
                 'tms1286682' => ['sip_1','gr303_1'],
-                'tms1286683' => ['sip_1','Sip_pbx'],
+                'tms1286683' => ['gr303_1','gr303_2'],
                 'tms1286684' => ['gr303_1','sip_1'],
-                'tms1286685' => ['gr303_1','sip_1'],
+                'tms1286685' => ['sip_1','sip_2'],
                 'tms1286686' => ['gr303_1','sip_1'],
                 'tms1286687' => ['gr303_1','sip_1'],
                 'tms1286688' => ['gr303_1','sip_1'],
@@ -391,7 +392,7 @@ our @TESTCASES = (
                     # "tms1286679",	#Core cold swact during signaling association , callp dropped, check the recovery and we can establish a new call with Attestation and Tagging properly after that
                     # "tms1286680",	#GWC cold swact during signaling association , callp dropped, check the recovery and we can establish a new call with Attestation and Tagging properly after that
                     # "tms1286681",	#SST cold swact during signaling association , callp dropped, check the recovery and we can establish a new call with Attestation and Tagging properly after that
-                    # "tms1286682",	#FRLS_RTS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
+                    # "tms1286682",	#Bsy_RTS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
                     # "tms1286683",	#BSY_RTS_FRLS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
                     # "tms1286684",	#For non_local calls, test by including different optional parameter in ATP with STRSHKN optional parameter
                     # "tms1286685",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
@@ -1266,6 +1267,8 @@ sub tms1286675 { #After restart warm, checking the OFCVAR Options
 # config table ofcvar
     &table_ofcvar_default();
 # Warm Swact Core by cmd: restart warm active
+    $ses_core->execCmd("logout");
+    sleep(8);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
             print FH "STEP: Go to CLI - PASS\n"; 
@@ -1605,6 +1608,8 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
         print FH "STEP: A calls B via SST - PASS\n";
     }
 # Warm Swact Core by cmd: restart warm active
+    $ses_core->execCmd("logout");
+    sleep(8);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
             print FH "STEP: Go to CLI - PASS\n"; 
@@ -1720,7 +1725,7 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
     
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
@@ -1879,15 +1884,6 @@ sub tms1286677 { #GWC warm swact during signaling association ,callp no dropped 
     } else {
         print FH "STEP: Login TMA15 core - PASS\n";
     }
-    unless ($ses_cli1->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core - PASS\n";
-    }
-
     unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
 		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
 		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
@@ -2035,6 +2031,8 @@ sub tms1286677 { #GWC warm swact during signaling association ,callp no dropped 
     }
 # Execute warm swact GWC during Call
 	# Login cli mode from CLI session
+    $ses_core->execCmd("logout");
+    sleep(8);
 	$ses_core ->{conn}->prompt('/>/');
 	unless (grep /cli/, $ses_core -> execCmd("cli")){
 		$logger->error(__PACKAGE__ . ": Can't login to cli mode");
@@ -2137,7 +2135,7 @@ sub tms1286677 { #GWC warm swact during signaling association ,callp no dropped 
     
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
@@ -2296,14 +2294,6 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
     } else {
         print FH "STEP: Login TMA15 core - PASS\n";
     }
-    unless ($ses_cli1->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core - PASS\n";
-    }
 
     unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
 		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
@@ -2450,8 +2440,10 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-# Execute warm swact GWC during Call
+# Execute warm swact SST during Call
 	# Login cli mode from CLI session
+    $ses_core->execCmd("logout");
+    sleep(8);
 	$ses_core ->{conn}->prompt('/>/');
 	unless (grep /cli/, $ses_core -> execCmd("cli")){
 		$logger->error(__PACKAGE__ . ": Can't login to cli mode");
@@ -2463,15 +2455,15 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
 	}
 	sleep(1);
 	my @state_unit;
-	unless (grep /active||standby/, @state_unit = $ses_core -> execCmd("aim si-assignment show gwc$gwc_id")){
-		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show gwc$gwc_id");
-		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - FAILED\n";
+	unless (grep /active||standby/, @state_unit = $ses_core -> execCmd("aim si-assignment show sst000")){
+		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show sst000");
+		print FH "STEP: Enter command aim si-assignment show sst000 - FAILED\n";
 		$result = 0;	  
 		goto CLEANUP;
 	} else {
-		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - PASSED\n";
+		print FH "STEP: Enter command aim si-assignment show sst000 - PASSED\n";
 	}
-	# Determine unit active on GWC-15
+	# Determine unit active on SST-15
 	my $unit_active;
 	foreach (@state_unit){
 		if ($_ =~ /\s+(\d+)\s+SI_1\s+active/){
@@ -2480,17 +2472,9 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
 		} 
 	}
 	sleep(1);
-	# Execue swact gwc for unit active  
-	unless (grep /confirm/,$ses_core -> execCmd("aim service-unit swact gwc$gwc_id $unit_active f")){
-		$logger->error(__PACKAGE__ . ": Can't swact gwc$gwc_id");
-		print FH "STEP: swact unit $unit_active active on gwc$gwc_id - FAILED\n";
-		$result = 0;	  
-		goto CLEANUP;
-	} else {
-		print FH "STEP: swact unit $unit_active active on gwc$gwc_id - PASSED\n";
-	}
-	
-	$ses_core->{conn}->print("y");
+	# Execue swact SST for unit active  
+	$ses_core -> execCmd("aim service-unit swact sst000 $unit_active f");
+	print FH "STEP: swact unit $unit_active active on sst000 - PASSED\n";
 	sleep (15);
 	
 	# Check status of unit active after swact 
@@ -2503,13 +2487,13 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
 	} else {
 		print FH "STEP: Login to cli mode from CLI session - PASSED\n";
 	}
-	unless (grep /active/, $ses_cli1 -> execCmd("aim si-assignment show gwc$gwc_id")){
-		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show gwc$gwc_id");
-		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - FAILED\n";
+	unless (grep /active/, $ses_cli1 -> execCmd("aim si-assignment show sst000")){
+		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show sst000");
+		print FH "STEP: Enter command aim si-assignment show sst000 - FAILED\n";
 		$result = 0;	  
 		goto CLEANUP;
 	} else {
-		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - PASSED\n";
+		print FH "STEP: Enter command aim si-assignment show sst000 - PASSED\n";
 	}
 	
 	sleep(3);
@@ -2554,7 +2538,7 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
     
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
@@ -3008,7 +2992,7 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
     
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
@@ -3167,15 +3151,6 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
     } else {
         print FH "STEP: Login TMA15 core - PASS\n";
     }
-    unless ($ses_cli1->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core - PASS\n";
-    }
-
     unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
 		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
 		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
@@ -3321,8 +3296,10 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-# Execute warm swact GWC during Call
-	# Login cli mode from CLI session
+# Execute cold swact GWC during Call
+	# Login cli from CLI session
+    $ses_core->execCmd("logout");
+    sleep(8);
 	$ses_core ->{conn}->prompt('/>/');
 	unless (grep /cli/, $ses_core -> execCmd("cli")){
 		$logger->error(__PACKAGE__ . ": Can't login to cli mode");
@@ -3342,27 +3319,19 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
 	} else {
 		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - PASSED\n";
 	}
-	# Determine unit active on GWC-15
-	my $unit_active;
-	foreach (@state_unit){
-		if ($_ =~ /\s+(\d+)\s+SI_1\s+active/){
-			$unit_active = $1;
-			print FH "The unit active on GWC-$gwc_id is: $unit_active\n";
-		} 
-	}
-	sleep(1);
-	# Execue swact gwc for unit active  
-	unless (grep /confirm/,$ses_core -> execCmd("aim service-unit swact gwc$gwc_id $unit_active f")){
+
+	# Execue swact gwc 
+	unless (grep /confirm/,$ses_core -> execCmd("gwc gwc-sg-mtce cold-swact gwc$gwc_id ")){
 		$logger->error(__PACKAGE__ . ": Can't swact gwc$gwc_id");
-		print FH "STEP: swact unit $unit_active active on gwc$gwc_id - FAILED\n";
+		print FH "STEP: gwc gwc-sg-mtce cold-swact gwc$gwc_id - FAILED\n";
 		$result = 0;	  
 		goto CLEANUP;
 	} else {
-		print FH "STEP: swact unit $unit_active active on gwc$gwc_id - PASSED\n";
+		print FH "STEP: gwc gwc-sg-mtce cold-swact gwc$gwc_id - PASSED\n";
 	}
 	
 	$ses_core->{conn}->print("y");
-	sleep (15);
+	sleep (200);
 	
 	# Check status of unit active after swact 
 	$ses_cli1 ->{conn}->prompt('/>/');
@@ -3392,12 +3361,12 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
                 -cas_timeout => 50000
              );
     unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and B ");
+        $logger->debug(__PACKAGE__ . " $tcid: checking no speech path between A and B ");
+        print FH "STEP: check speech path between A and B - PASS\n";
+    } else {
         print FH "STEP: check speech path between A and B - FAIL\n";
         $result = 0;
         goto CLEANUP;
-    } else {
-        print FH "STEP: check speech path between A and B - PASS\n";
     }
 # Hang up line A,B
     foreach ($list_line[0], $list_line[1]){
@@ -3425,7 +3394,7 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
     
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
@@ -3738,8 +3707,10 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-# Execute warm swact GWC during Call
-	# Login cli mode from CLI session
+# Execute cold swact SST during Call
+	# Login cli cold from CLI session
+    $ses_core->execCmd("logout");
+    sleep(8);
 	$ses_core ->{conn}->prompt('/>/');
 	unless (grep /cli/, $ses_core -> execCmd("cli")){
 		$logger->error(__PACKAGE__ . ": Can't login to cli mode");
@@ -3751,35 +3722,26 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
 	}
 	sleep(1);
 	my @state_unit;
-	unless (grep /active||standby/, @state_unit = $ses_core -> execCmd("aim si-assignment show gwc$gwc_id")){
-		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show gwc$gwc_id");
-		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - FAILED\n";
+	unless (grep /active||standby/, @state_unit = $ses_core -> execCmd("aim si-assignment show sst000")){
+		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show sst000");
+		print FH "STEP: Enter command aim si-assignment show sst000 - FAILED\n";
 		$result = 0;	  
 		goto CLEANUP;
 	} else {
-		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - PASSED\n";
+		print FH "STEP: Enter command aim si-assignment show sst000 - PASSED\n";
 	}
-	# Determine unit active on GWC-15
-	my $unit_active;
-	foreach (@state_unit){
-		if ($_ =~ /\s+(\d+)\s+SI_1\s+active/){
-			$unit_active = $1;
-			print FH "The unit active on GWC-$gwc_id is: $unit_active\n";
-		} 
-	}
-	sleep(1);
-	# Execue swact gwc for unit active  
-	unless (grep /confirm/,$ses_core -> execCmd("aim service-unit swact gwc$gwc_id $unit_active f")){
+    # Execue swact SST 
+	unless (grep /confirm/,$ses_core -> execCmd("sst sst-sg-maintenance cold-swact sst000 ")){
 		$logger->error(__PACKAGE__ . ": Can't swact gwc$gwc_id");
-		print FH "STEP: swact unit $unit_active active on gwc$gwc_id - FAILED\n";
+		print FH "STEP: sst sst-sg-maintenance cold-swact sst000 - FAILED\n";
 		$result = 0;	  
 		goto CLEANUP;
 	} else {
-		print FH "STEP: swact unit $unit_active active on gwc$gwc_id - PASSED\n";
+		print FH "STEP: sst sst-sg-maintenance cold-swact sst000 - PASSED\n";
 	}
 	
 	$ses_core->{conn}->print("y");
-	sleep (15);
+	sleep (200);
 	
 	# Check status of unit active after swact 
 	$ses_cli1 ->{conn}->prompt('/>/');
@@ -3791,9 +3753,9 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
 	} else {
 		print FH "STEP: Login to cli mode from CLI session - PASSED\n";
 	}
-	unless (grep /active/, $ses_cli1 -> execCmd("aim si-assignment show gwc$gwc_id")){
-		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show gwc$gwc_id");
-		print FH "STEP: Enter command aim si-assignment show gwc$gwc_id - FAILED\n";
+	unless (grep /active/, $ses_cli1 -> execCmd("aim si-assignment show sst000")){
+		$logger->error(__PACKAGE__ . ": Can't enter command aim si-assignment show sst000");
+		print FH "STEP: Enter command aim si-assignment show sst000 - FAILED\n";
 		$result = 0;	  
 		goto CLEANUP;
 	} else {
@@ -3801,6 +3763,21 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
 	}
 	
 	sleep(3);
+# Check speech path between A and B
+    %input = (
+                -list_port => [$list_line[0],$list_line[1]], 
+                -checking_type => ['TESTTONE','DIGITS'], 
+                -tone_duration => 2000, 
+                -cas_timeout => 50000
+             );
+    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
+        $logger->debug(__PACKAGE__ . " $tcid: checking no speech path between A and B ");
+        print FH "STEP: check speech path between A and B - PASS\n";
+    } else {
+        print FH "STEP: check speech path between A and B - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    }
 # Check speech path between A and B
     %input = (
                 -list_port => [$list_line[0],$list_line[1]], 
@@ -3842,7 +3819,7 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
     
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
@@ -3928,7 +3905,7 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
     # check the result var to know the TC is passed or failed
     &Luan_checkResult($tcid, $result);
 }
-sub tms1286682 { #FRLS_RTS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
+sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
     $logger->debug(__PACKAGE__ . " Inside test case tms1286682");
 
 ########################### Variables Declaration #############################
@@ -4190,34 +4167,16 @@ sub tms1286682 { #FRLS_RTS the originator or DPT trunk during signaling associat
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-    #onhook A
-    unless($ses_glcas->onhookCAS(-line_port => $list_line[0], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_dn[0]");
-        print FH "STEP: Onhook line A - FAIL\n";
-        $result = 0;
-    } else {
-        print FH "STEP: Onhook line A - PASS\n";
-    }
-    sleep(2);
-    #onhook B
-    unless($ses_glcas->onhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_dn[1]");
-        print FH "STEP: Onhook line B - FAIL\n";
-        $result = 0;
-    } else {
-        print FH "STEP: Onhook line B - PASS\n";
-    }
-    sleep(2);
-# pos trk in Mapci
+# pos trk Bsy_RTS in Mapci
     $ses_core->{conn}->prompt('/\>$/');
     my @cmd_result;
     my $status;
     if (grep /Undefined command|error/, @cmd_result= $ses_core->execCmd("mapci;mtc;trks;DPTRKS;post g SSTSHAKEN")) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed to execution cmd 'post'");
-        print FH "STEP: Execution cmd 'post' - FAIL\n";
+        $logger->error(__PACKAGE__ . " $tcid: Failed to execution cmd 'post SSTSHAKEN'");
+        print FH "STEP: Execution cmd 'post SSTSHAKEN' - FAIL\n";
         $result = 0;
     } else {
-        print FH "STEP: Execution cmd 'post' - PASS\n";
+        print FH "STEP: Execution cmd 'post SSTSHAKEN' - PASS\n";
     }
     my $i = 0;
     foreach(@cmd_result){
@@ -4235,7 +4194,6 @@ sub tms1286682 { #FRLS_RTS the originator or DPT trunk during signaling associat
             print FH "STEP: Verify SST state on the mapci => Output: $status - PASS\n";
         }       
     }
-    
     $ses_core->execCmd("quit all");
     $ses_core->execCmd("mapci nodisp;mtc;trks;DPTRKS;post g SSTSHAKEN");
     unless (grep /RES/, $ses_core->execCmd("bsy")) {
@@ -4245,6 +4203,22 @@ sub tms1286682 { #FRLS_RTS the originator or DPT trunk during signaling associat
     } else {
         print FH "STEP: Verify SST is busy successfully - PASS\n";
     }
+    # Check speech path between A and B
+    %input = (
+                -list_port => [$list_line[0],$list_line[1]], 
+                -checking_type => ['TESTTONE','DIGITS'], 
+                -tone_duration => 2000, 
+                -cas_timeout => 50000
+             );
+    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and B ");
+        print FH "STEP: check speech path between A and B - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: check speech path between A and B - PASS\n";
+    }
+    $ses_core->execCmd("mapci nodisp;mtc;trks;DPTRKS;post g SSTSHAKEN");
     $ses_core->execCmd("rts");
     $ses_core->execCmd("quit all");
     @cmd_result= $ses_core->execCmd("mapci;mtc;trks;DPTRKS;post g SSTSHAKEN");
@@ -4265,53 +4239,6 @@ sub tms1286682 { #FRLS_RTS the originator or DPT trunk during signaling associat
     } else {
         print FH "STEP: Verify SST is returned successfully to Insv state - PASS\n";
     }
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['RINGBACK','RINGING'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: A calls B via SST - PASS\n";
-    }
-    #onhook A
-    unless($ses_glcas->onhookCAS(-line_port => $list_line[0], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_dn[0]");
-        print FH "STEP: Onhook line A - FAIL\n";
-        $result = 0;
-    } else {
-        print FH "STEP: Onhook line A - PASS\n";
-    }
-    sleep(2);
-    #onhook B
-    unless($ses_glcas->onhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_dn[1]");
-        print FH "STEP: Onhook line B - FAIL\n";
-        $result = 0;
-    } else {
-        print FH "STEP: Onhook line B - PASS\n";
-    }
-    sleep(2);
-
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -4641,34 +4568,16 @@ sub tms1286683 { #BSY_RTS_FRLS the originator or DPT trunk during signaling asso
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-    #onhook A
-    unless($ses_glcas->onhookCAS(-line_port => $list_line[0], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_dn[0]");
-        print FH "STEP: Onhook line A - FAIL\n";
-        $result = 0;
-    } else {
-        print FH "STEP: Onhook line A - PASS\n";
-    }
-    sleep(2);
-    #onhook B
-    unless($ses_glcas->onhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_dn[1]");
-        print FH "STEP: Onhook line B - FAIL\n";
-        $result = 0;
-    } else {
-        print FH "STEP: Onhook line B - PASS\n";
-    }
-    sleep(2);
-# pos trk in Mapci
+# pos trk Bsy_RTS in Mapci
     $ses_core->{conn}->prompt('/\>$/');
     my @cmd_result;
     my $status;
     if (grep /Undefined command|error/, @cmd_result= $ses_core->execCmd("mapci;mtc;trks;DPTRKS;post g SSTSHAKEN")) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed to execution cmd 'post'");
-        print FH "STEP: Execution cmd 'post' - FAIL\n";
+        $logger->error(__PACKAGE__ . " $tcid: Failed to execution cmd 'post SSTSHAKEN'");
+        print FH "STEP: Execution cmd 'post SSTSHAKEN' - FAIL\n";
         $result = 0;
     } else {
-        print FH "STEP: Execution cmd 'post' - PASS\n";
+        print FH "STEP: Execution cmd 'post SSTSHAKEN' - PASS\n";
     }
     my $i = 0;
     foreach(@cmd_result){
@@ -4686,7 +4595,6 @@ sub tms1286683 { #BSY_RTS_FRLS the originator or DPT trunk during signaling asso
             print FH "STEP: Verify SST state on the mapci => Output: $status - PASS\n";
         }       
     }
-    
     $ses_core->execCmd("quit all");
     $ses_core->execCmd("mapci nodisp;mtc;trks;DPTRKS;post g SSTSHAKEN");
     unless (grep /RES/, $ses_core->execCmd("bsy")) {
@@ -4695,6 +4603,47 @@ sub tms1286683 { #BSY_RTS_FRLS the originator or DPT trunk during signaling asso
         $result = 0;
     } else {
         print FH "STEP: Verify SST is busy successfully - PASS\n";
+    }
+    # Check speech path between A and B
+    %input = (
+                -list_port => [$list_line[0],$list_line[1]], 
+                -checking_type => ['TESTTONE','DIGITS'], 
+                -tone_duration => 2000, 
+                -cas_timeout => 50000
+             );
+    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and B ");
+        print FH "STEP: check speech path between A and B - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: check speech path between A and B - PASS\n";
+    }
+
+    $ses_core->execCmd("mapci nodisp;mtc;trks;DPTRKS;post g SSTSHAKEN");
+    unless (grep /confirm/, $ses_core->execCmd("frls all")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot cfrls all");
+        print FH "STEP: frls all - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        $ses_core->execCmd("y");
+        print FH "STEP: frls all - PASS\n";
+    }
+    # Check speech path between A and B
+    %input = (
+                -list_port => [$list_line[0],$list_line[1]], 
+                -checking_type => ['TESTTONE','DIGITS'], 
+                -tone_duration => 2000, 
+                -cas_timeout => 50000
+             );
+    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
+        print FH "STEP: check no speech path between A and B - PASS\n";
+    } else {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at checking no speech path between A and B ");
+        print FH "STEP: check no speech path between A and B - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
     }
     $ses_core->execCmd("rts");
     $ses_core->execCmd("quit all");
@@ -4715,6 +4664,16 @@ sub tms1286683 { #BSY_RTS_FRLS the originator or DPT trunk during signaling asso
         $result = 0;
     } else {
         print FH "STEP: Verify SST is returned successfully to Insv state - PASS\n";
+    }
+    # Hang up line A,B
+    foreach ($list_line[0], $list_line[1]){
+        unless($ses_glcas->onhookCAS(-line_port => $_, -wait_for_event_time => $wait_for_event_time)) {
+            $logger->error(__PACKAGE__ . ": Cannot onhook line $_");
+            print FH "STEP: Onhook line $_ - FAIL\n";
+            $result = 0;
+        } else {
+            print FH "STEP: Onhook line $_ - PASS\n";
+        }
     }
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
@@ -5349,7 +5308,7 @@ sub tms1286685 { #Verifying verstat parameter to be sent properly from Incoming 
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286685 ##################################
@@ -5634,7 +5593,7 @@ sub tms1286686 { #Verifying verstat parameter to be sent properly from Incoming 
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286686 ##################################
@@ -6333,7 +6292,7 @@ sub tms1286689 { #Verifying verstat parameter to be sent properly from PRI to SI
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
         %input = (
@@ -6489,7 +6448,7 @@ sub tms1286689 { #Verifying verstat parameter to be sent properly from PRI to SI
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286689 ##################################
@@ -6618,7 +6577,7 @@ sub tms1286690 { #Verifying verstat parameter to be sent properly from PRI to SI
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
         %input = (
@@ -6774,7 +6733,7 @@ sub tms1286690 { #Verifying verstat parameter to be sent properly from PRI to SI
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286690 ##################################
@@ -6903,7 +6862,7 @@ sub tms1286691 { #Verifying verstat parameter to be sent properly from SIP-PBX t
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
         %input = (
@@ -7059,7 +7018,7 @@ sub tms1286691 { #Verifying verstat parameter to be sent properly from SIP-PBX t
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286691 ##################################
@@ -7188,7 +7147,7 @@ sub tms1286692 { #Verifying verstat parameter to be sent properly from SIP_PBX t
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
         %input = (
@@ -7344,7 +7303,7 @@ sub tms1286692 { #Verifying verstat parameter to be sent properly from SIP_PBX t
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286692 ##################################
@@ -7473,7 +7432,7 @@ sub tms1286693 { #Verify he attestation value shall be used to build and pass a 
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
         %input = (
@@ -7629,7 +7588,7 @@ sub tms1286693 { #Verify he attestation value shall be used to build and pass a 
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286693 ##################################
