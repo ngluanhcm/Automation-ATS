@@ -44,6 +44,8 @@ my $logger = Log::Log4perl->get_logger(__PACKAGE__);
 my %REQUIRED = ( 
         "C20" => [1],
         "GLCAS" => [1],
+        "SIPP" => [1],
+        "AS"  => [1],
                );
 
 ################################################################################
@@ -85,7 +87,18 @@ our ($root_pass) = $alias_hashref->{LOGIN}->{1}->{ROOTPASSWD};
 my $as = SonusQA::Utils::resolve_alias($TESTBED{ "as:1:ce0"});
 my $ip = $as->{MGMTNIF}->{1}->{IP};
 $gwc_id = 13; #GWC gr303
+my $userA = "2124489599";
+my $userB = "4409578";
+my $userC = "7892006";
+our $SIPp_folder = "/usr/src/bilge/sipp-3.5.2";
+our $ipsst = "10.250.161.132";
+our $ipats = "10.250.199.24";
+our $SIPp_folder_file = "/home/$ENV{ USER }/ats_repos/lib/perl/QATEST/C20_EO/Luan/Automation_ATS/SHAKEN19";
 
+our $SIPp_A;
+our $soapui;
+our $SIPp_A_cmd;
+ 
 # Line Info
 our %db_line = (
                 'gr303_1' => {
@@ -125,9 +138,9 @@ our %db_line = (
                             },
                 'sip_2' => {#sip_2
                             -line => 40,
-                            -dn => 2124409575,
+                            -dn => 2124409578,
                             -region => 'US',
-                            -len => 'SL10   00 0 00 75',
+                            -len => 'SL10   00 0 00 78',
                             -info => 'IBN AUTO_GRP 0 0 NILLATA 0 ',
                             },
 
@@ -152,12 +165,12 @@ our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
                 'tms1286691' => ['gr303_1','sip_1'],
                 'tms1286692' => ['gr303_1','sip_1'],
                 'tms1286693' => ['gr303_1','sip_1'],
-                'tms1286694' => ['gr303_1','gr303_1'],
-                'tms1286695' => ['gr303_1','sip_1'],
-                'tms1286696' => ['gr303_1','sip_1'],
-                'tms1286697' => ['gr303_1','sip_1'],
-                'tms1286698' => ['gr303_1','sip_1'],
-                'tms1286699' => ['gr303_1','sip_1'],
+                'tms1286694' => ['sip_2','gr303_1'],
+                'tms1286695' => ['sip_2','sip_1'],
+                'tms1286696' => ['sip_2','sip_1'],
+                'tms1286697' => ['sip_2','sip_1'],
+                'tms1286698' => ['sip_2','sip_1'],
+                'tms1286699' => ['sip_2','sip_1'],
                 'tms1286700' => ['gr303_1','sip_1'],
                 'tms1286701' => ['gr303_1','sip_1'],
                 'tms1286702' => ['gr303_1','sip_1'],
@@ -170,8 +183,8 @@ our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
                 'tms1286709' => ['gr303_1','sip_1'],
                 'tms1286710' => ['gr303_1','sip_1'],
                 'tms1286711' => ['gr303_1','sip_1'],
-                'tms1286712' => ['gr303_1','sip_1'],
-                'tms1286713' => ['gr303_1','sip_1'],
+                'tms1286712' => ['sip_2','gr303_1'],
+                'tms1286713' => ['sip_2','gr303_1'],
 );
 
 #################### Trunk info ###########################
@@ -196,6 +209,11 @@ our %db_trunk = (
                                 -region => 'US',
                                 -clli => 'SSTSHAKEN',
                             },
+                't15_sst_sipp' =>{
+                                -acc => 771,
+                                -region => 'US',
+                                -clli => 'SSTSHAKEN2',
+                            },            
                 't15_pri' =>{
                                 -acc => 504,  #200 #504
                                 -region => 'US',
@@ -218,7 +236,7 @@ sub Luan_cleanup {
     my $subname = "Luan_cleanup";
     $logger->debug(__PACKAGE__ ." . $subname . DESTROYING OBJECTS");
     my @end_ses = (
-                    $ses_core, $ses_glcas, $ses_logutil,$ses_calltrak, $ses_tapi
+                    $ses_core, $ses_glcas, $ses_logutil,$ses_calltrak, $ses_tapi, $SIPp_A, $soapui
                     );
     foreach (@end_ses) {
         if (defined $_) {
@@ -423,7 +441,7 @@ our @TESTCASES = (
                     # "tms1286710",	#OM_Verify New OM STRSHKN values : VERSTATB
                     # "tms1286711",	#OM_Verify New OM STRSHKN value VERSTATC
                     # "tms1286712",	#OM_Verify New OM STRSHKN value VPASSED
-                    # "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
+                    "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
                     # "tms1303242",	#After restart cold, checking the OFCVAR Options
                     # "tms1303243",	#After restart reload, checking the OFCVAR Options
                     # "tms1303244",	#Error path_set STRSHKN_ENABLED Y Y when The Stir Shaken SOC CS2B0009 is NOT Enabled
@@ -7660,7 +7678,7 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my $flag = 1;
-    my (@list_file_name, $dialed_num, @callTrakLogs );
+    my (@list_file_name, $dialed_num, @callTrakLogs, );
     
 ################################# LOGIN #######################################
     unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
@@ -7671,14 +7689,7 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
+
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -7714,11 +7725,24 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
 
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
     $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
-# Check line status
+# Check line status		
     for (my $i = 0; $i <= $#list_dn; $i++){
         %input = (
                     -function => ['OUT','NEW'], 
@@ -7744,7 +7768,7 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
         } else {
             print FH "STEP: Check line $list_dn[$i] status- PASS\n";
         }
-    }
+    }    
     unless ($flag){
         $result = 0;
         goto CLEANUP;
@@ -7752,7 +7776,7 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -7774,37 +7798,7 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
-
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
+   
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -7824,7 +7818,7 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -7835,36 +7829,37 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['NONE'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
 
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286694.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -7873,7 +7868,8 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+VERIFICATION PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286694 ##################################
@@ -7956,14 +7952,6 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -7998,7 +7986,19 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
-
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
@@ -8037,7 +8037,7 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -8059,37 +8059,7 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
-
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
+  
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -8109,7 +8079,7 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -8120,36 +8090,37 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['NONE'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
 
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286695.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8159,7 +8130,9 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+VERIFICATION PASSED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
+
     }
     
 ################################## Cleanup tms1286695 ##################################
@@ -8242,14 +8215,6 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -8284,7 +8249,19 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
-
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
@@ -8323,7 +8300,7 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -8345,37 +8322,7 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
-
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
+  
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -8395,7 +8342,7 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -8406,36 +8353,37 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['NONE'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
 
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286696.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8445,7 +8393,8 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+VERIFICATION PASSED','STRSHKN_ATTESTATION\s+:\s+C', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+C', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286696 ##################################
@@ -8528,14 +8477,7 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
+
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -8570,7 +8512,19 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
-
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
@@ -8609,7 +8563,7 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -8631,37 +8585,7 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
-
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
+ 
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -8681,7 +8605,7 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -8692,36 +8616,37 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['NONE'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
 
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286697.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8731,7 +8656,9 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+VERIFICATION FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
+
     }
     
 ################################## Cleanup tms1286697 ##################################
@@ -8814,14 +8741,7 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
+
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -8856,7 +8776,19 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
-
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
@@ -8895,7 +8827,7 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -8917,37 +8849,7 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
-
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
+  
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -8967,7 +8869,7 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -8978,36 +8880,37 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['NONE'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
 
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286698.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -9015,7 +8918,9 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
         }else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+VERIFICATION FAILED','STRSHKN_ATTESTATION\s+:\s+C', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+C', @callTrakLogs);
+
     }
     
 ################################## Cleanup tms1286698 ##################################
@@ -9098,14 +9003,7 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
+
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -9140,7 +9038,19 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
     } else {
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
-
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
@@ -9179,7 +9089,7 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -9201,37 +9111,7 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
-
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
+   
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -9251,7 +9131,7 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -9262,36 +9142,37 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['NONE'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
 
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286699.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -9300,7 +9181,7 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+NOINFO','VERSTAT DATA\s+:\s+NO INFO', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286699 ##################################
@@ -11692,8 +11573,8 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my $flag = 1;
-    my $ATTESTB;
-    my $ATTESTB1;
+    my $ATTESTA;
+    my $ATTESTA1;
     my (@list_file_name, $dialed_num, @callTrakLogs );
     
 ################################# LOGIN #######################################
@@ -11875,7 +11756,7 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
         if ($_ =~ /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
-            $ATTESTB = $1;
+            $ATTESTA = $1;
         }
     }
 # A calls B via trunk and hears ringback then B ring and check speech path
@@ -11912,14 +11793,14 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
         if ($_ =~ /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
-            $ATTESTB1 = $1;
+            $ATTESTA1 = $1;
             last;
         }
     }
-    if($ATTESTB != $ATTESTB1){
-        print FH "STEP: ATTESTB ++  - PASS\n";
+    if($ATTESTA != $ATTESTA1){
+        print FH "STEP: ATTESTA ++  - PASS\n";
     }else{
-        print FH "STEP: ATTESTB ++  - FAIL\n";
+        print FH "STEP: ATTESTA ++  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     }
@@ -11933,7 +11814,7 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+KINGOFKINGOFCVAR/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
+        unless ((grep /DATA CHARS\s+:\s+KINGOFKINGOFCVAR/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs)) {
             #grep /DATA CHARS\s+:\s+KINGOFKINGOFCVAR/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
             $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
             $result = 0;
@@ -12192,7 +12073,7 @@ sub tms1286710 { #OM_Verify New OM STRSHKN values : VERSTATB
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ($_ =~ /\d+\s+(\d+)\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $ATTESTB = $1;
@@ -12229,7 +12110,7 @@ sub tms1286710 { #OM_Verify New OM STRSHKN values : VERSTATB
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ($_ =~ /\d+\s+(\d+)\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $ATTESTB1 = $1;
@@ -12332,8 +12213,8 @@ sub tms1286711 { #OM_Verify New OM STRSHKN values : VERSTATC
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my $flag = 1;
-    my $ATTESTB;
-    my $ATTESTB1;
+    my $ATTESTC;
+    my $ATTESTC1;
     my (@list_file_name, $dialed_num, @callTrakLogs );
     
 ################################# LOGIN #######################################
@@ -12512,10 +12393,10 @@ sub tms1286711 { #OM_Verify New OM STRSHKN values : VERSTATC
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ($_ =~ /\d+\s+\d+\s+(\d+)/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
-            $ATTESTB = $1;
+            $ATTESTC = $1;
         }
     }
 # A calls B via trunk and hears ringback then B ring and check speech path
@@ -12549,17 +12430,17 @@ sub tms1286711 { #OM_Verify New OM STRSHKN values : VERSTATC
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ($_ =~ /\d+\s+\d+\s+(\d+)/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
-            $ATTESTB1 = $1;
+            $ATTESTC1 = $1;
             last;
         }
     }
-    if($ATTESTB != $ATTESTB1){
-        print FH "STEP: ATTESTB ++  - PASS\n";
+    if($ATTESTC != $ATTESTC1){
+        print FH "STEP: ATTESTC ++  - PASS\n";
     }else{
-        print FH "STEP: ATTESTB ++  - FAIL\n";
+        print FH "STEP: ATTESTC ++  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     }
@@ -12652,8 +12533,8 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my $flag = 1;
-    my $ATTESTB;
-    my $ATTESTB1;
+    my $VPASSED;
+    my $VPASSED1;
     my (@list_file_name, $dialed_num, @callTrakLogs );
     
 ################################# LOGIN #######################################
@@ -12665,14 +12546,7 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
+
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -12707,7 +12581,19 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
     } else {
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
-
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
@@ -12745,7 +12631,7 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -12767,37 +12653,7 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
-
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
+  
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -12815,9 +12671,19 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
     $logutil_start = 1;
 
 ###################### Call flow ###########################
+#omshow STRSHKN active
+    $ses_core->{conn}->prompt('/\>/');
+    my @output = $ses_core->execCmd("omshow STRSHKN active");
+    for(@output){
+        if ($_ =~ /\d+\s+\d+\s+\d+\s+(\d+)/) {
+            $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
+            print FH "STEP: omshow STRSHKN active - PASS\n";
+            $VPASSED = $1;
+        }
+    }
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -12828,58 +12694,51 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-#omshow STRSHKN active
-    $ses_core->{conn}->prompt('/\>/');
-    my @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
-            $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
-            print FH "STEP: omshow STRSHKN active - PASS\n";
-            $ATTESTB = $1;
-        }
-    }
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['RINGBACK','RINGING'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
+
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286694.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ($_ =~ /\d+\s+\d+\s+\d+\s+(\d+)/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
-            $ATTESTB1 = $1;
+            $VPASSED1 = $1;
             last;
         }
     }
-    if($ATTESTB != $ATTESTB1){
-        print FH "STEP: ATTESTB ++  - PASS\n";
+    if($VPASSED != $VPASSED1){
+        print FH "STEP: VPASSED ++  - PASS\n";
     }else{
-        print FH "STEP: ATTESTB ++  - FAIL\n";
+        print FH "STEP: VPASSED ++  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     }
@@ -12889,20 +12748,13 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
             $logger->error(__PACKAGE__ . " $tcid: Cannot stop calltrak ");
         }
-        
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+KINGOFKINGOFCVAR/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
-            #grep /DATA CHARS\s+:\s+KINGOFKINGOFCVAR/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
-            $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
-            $result = 0;
-            print FH "STEP: Check STRSHKN_IE IE - FAIL\n";
-        } else {
-            print FH "STEP: Check STRSHKN_IE IE - PASS\n";
-        }
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+VERIFICATION PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
     }
-    
+      
 ################################## Cleanup tms1286712 ##################################
     CLEANUP:
     $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1286712 ##################################");
@@ -12972,8 +12824,8 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my $flag = 1;
-    my $ATTESTB;
-    my $ATTESTB1;
+    my $VFAILED;
+    my $VFAILED1;
     my (@list_file_name, $dialed_num, @callTrakLogs );
     
 ################################# LOGIN #######################################
@@ -12985,14 +12837,7 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
-        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
-        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
+
     unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 for Logutil - FAIL\n";
@@ -13027,7 +12872,19 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
     } else {
         print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
-
+    unless($SIPp_A = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "sipp:1:ce0" },-sessionLog => "$tcid"."_SIPp_A")){
+          $logger->error(__PACKAGE__ . ": Could not create UAC object for tms_alias => TESTBED{ ‘as:2:ce0’ }");
+          return 0;
+    } else {
+        print FH "STEP: Login UAC server - PASSED\n";
+    }
+    unless($soapui = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "as:1:ce0"},-sessionLog => "$tcid"."_SOAPLog")){
+        $logger->error(__PACKAGE__ . ": Could not create SOAP_UI object for tms_alias => TESTBED{ ‘as:1:ce0’ }");            
+        print FH "STEP: Login ATS server - FAILED\n";
+        return 0;              
+    } else {
+        print FH "STEP: Login ATS server - PASSED\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
@@ -13065,7 +12922,7 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
  
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -13087,37 +12944,7 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
         $result = 0;
         goto CLEANUP;
     }
-# Initialize Call
-    %input = (
-                -cas_server => [@cas_server],
-                -list_port => [@list_line],
-                -tone_type => 0
-             );
-    unless($ses_glcas->initializeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
-		print FH "STEP: Initialize Call - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Initialize Call - PASS\n";
-    }
 
-    for (my $i = 0; $i <= $#list_line; $i++){
-        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
-            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: set region for line $list_line[$i] - PASS\n";
-        }
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
-    $initialize_done = 1;
-    
 # Start logutil
     %input = (
                 -username => [@{$core_account{-username}}[6..9]], 
@@ -13135,9 +12962,19 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
     $logutil_start = 1;
 
 ###################### Call flow ###########################
+#omshow STRSHKN active
+    $ses_core->{conn}->prompt('/\>/');
+    my @output = $ses_core->execCmd("omshow STRSHKN active");
+    print Dumper \$output[-3];
+        if ($output[-3] =~ /(\d+)\s+\d+/) {
+            $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
+            print FH "STEP: omshow STRSHKN active - PASS\n";
+            $VFAILED = $1;
+        }
+
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst_sipp'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -13148,58 +12985,50 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-#omshow STRSHKN active
-    $ses_core->{conn}->prompt('/\>/');
-    my @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
-            $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
-            print FH "STEP: omshow STRSHKN active - PASS\n";
-            $ATTESTB = $1;
-        }
-    }
-# A calls B via trunk and hears ringback then B ring and check speech path
-    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
-    $dialed_num = $trunk_access_code . $1;
-    %input = (
-                -lineA => $list_line[0],
-                -lineB => $list_line[1],
-                -dialed_number => $dialed_num,
-                -regionA => $list_region[0],
-                -regionB => $list_region[1],
-                -check_dial_tone => 'y',
-                -digit_on => 300,
-                -digit_off => 300,
-                -detect => ['RINGBACK','RINGING'],
-                -ring_on => [0],
-                -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
-                -flash => ''
-                );
-    unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# changecsvfileA
+	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+       print FH "STEP: Modify CSV A- PASSED\n";
     }
+# RUN SIPP
+	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
+
+# A calls B via trunk and hears ringback then B ring via sipp
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286697.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		$result = 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+    print Dumper \$output[-3];
+        if ($output[-3] =~ /(\d+)\s+\d+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
-            $ATTESTB1 = $1;
-            last;
+            $VFAILED1 = $1;
         }
-    }
-    if($ATTESTB != $ATTESTB1){
-        print FH "STEP: ATTESTB ++  - PASS\n";
+    
+    if($VFAILED != $VFAILED1){
+        print FH "STEP: VFAILED ++  - PASS\n";
     }else{
-        print FH "STEP: ATTESTB ++  - FAIL\n";
+        print FH "STEP: VFAILED ++  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     }
@@ -13213,16 +13042,11 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+KINGOFKINGOFCVAR/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
-            #grep /DATA CHARS\s+:\s+KINGOFKINGOFCVAR/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
-            $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
-            $result = 0;
-            print FH "STEP: Check STRSHKN_IE IE - FAIL\n";
-        } else {
-            print FH "STEP: Check STRSHKN_IE IE - PASS\n";
-        }
+        $result = &check_log('STRSHKN_VERSTAT\s+:\s+VERIFICATION FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
+
     }
-    
+     
 ################################## Cleanup tms1286713 ##################################
     CLEANUP:
     $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1286713 ##################################");

@@ -27,4 +27,6 @@
 our @TESTBED = (
         "GLCAS_Server53",
         "TMA15_Lu",
+        "SIPP_ATS_24",     #1
+        "ATS_AS",          #1
         );
