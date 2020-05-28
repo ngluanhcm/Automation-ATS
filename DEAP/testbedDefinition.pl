@@ -1,3 +1,5 @@
+
+
 #!/ats/bin/perl
 
 #####################################
@@ -23,6 +25,6 @@
 
 
 our @TESTBED = (
-        "GLCAS_Server53", # Server 53  is used for connecting to GLCAS
-        "TMA20", # TMA20 lab in C20 object
+        "GLCAS_Server53",
+        "TMA15_Lu",
         );

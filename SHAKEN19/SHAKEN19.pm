@@ -92,7 +92,7 @@ my $userB = "4409578";
 my $userC = "7892006";
 our $SIPp_folder = "/usr/src/bilge/sipp-3.5.2";
 our $ipsst = "10.250.161.132";
-our $ipats = "10.250.199.24";
+our $ipats = "10.250.188.90";
 our $SIPp_folder_file = "/home/$ENV{ USER }/ats_repos/lib/perl/QATEST/C20_EO/Luan/Automation_ATS/SHAKEN19";
 
 our $SIPp_A;
@@ -441,7 +441,7 @@ our @TESTCASES = (
                     # "tms1286710",	#OM_Verify New OM STRSHKN values : VERSTATB
                     # "tms1286711",	#OM_Verify New OM STRSHKN value VERSTATC
                     # "tms1286712",	#OM_Verify New OM STRSHKN value VPASSED
-                    "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
+                    # "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
                     # "tms1303242",	#After restart cold, checking the OFCVAR Options
                     # "tms1303243",	#After restart reload, checking the OFCVAR Options
                     # "tms1303244",	#Error path_set STRSHKN_ENABLED Y Y when The Stir Shaken SOC CS2B0009 is NOT Enabled
@@ -899,6 +899,7 @@ sub tms1286667 { #Provisioning_office parameters datafil control STRSHKN_Verstat
     }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
+    $ses_core->execCmd("\x03");
     $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
 ################################## Cleanup tms1286667 ##################################
     CLEANUP:
@@ -2642,6 +2643,7 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
     # check the result var to know the TC is passed or failed
     &Luan_checkResult($tcid, $result);
 }
+
 sub tms1286679 { #Core cold swact during signaling association , callp dropped, check the recovery and we can establish a new call with Attestation and Tagging properly after that
     $logger->debug(__PACKAGE__ . " Inside test case tms1286679");
 
@@ -12606,14 +12608,14 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
                     -len => '', 
                     -lineInfo => $list_line_info[$i]
                 );
-        unless ($ses_core->resetLine(%input)) {
-            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] cannot reset");
-            print FH "STEP: Reset line $list_dn[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: Reset line $list_dn[$i] - PASS\n";
-        }
+        # unless ($ses_core->resetLine(%input)) {
+        #     $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] cannot reset");
+        #     print FH "STEP: Reset line $list_dn[$i] - FAIL\n";
+        #     $flag = 0;
+        #     last;
+        # } else {
+        #     print FH "STEP: Reset line $list_dn[$i] - PASS\n";
+        # }
 		
         unless (grep /IDL/, $ses_core->coreLineGetStatus($list_dn[$i])) {
             $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] is not IDL");

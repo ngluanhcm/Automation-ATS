@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="ISO-8859-1" ?>
 <!DOCTYPE scenario SYSTEM "sipp.dtd">
 
-<!--<! sipp 10.250.161.132 -p 5060 -sf tms1286694.xml -i 10.250.199.24 -m 1  -inf kbs_A.csv >-->
+<!--<! sipp 10.250.161.132 -p 5060 -sf tms1286694.xml -i 10.250.188.90 -m 1  -inf kbs_A.csv >-->
 <!--<! sipp 10.250.161.132 -p 5060 -sf tms1286694.xml -i 10.250.193.232 -m 1 -inf kbs_A.csv >-->
 <scenario name="sipp">
 
@@ -27,6 +27,7 @@ Call-ID: [call_id]
 P-Asserted-Identity: <sip:[$called_party];verstat=TN-Validation-Passed@[remote_ip];user=phone>
 P-Origination-ID: 1cab14fd7c294c95adadaw
 P-Attestation-Indicator: A
+User-Agent : SSTSHAKEN
 Identity: eyJhbGciOiJFUzI1NiIsInR5cCI6InBhc3Nwb3J0IiwieDV1IjoiaHR0cHM6Ly9jZXJ0LmV4YW1wbGUub3JnL3Bhc3Nwb3J0LmNlciJ9.eyJkZXN0Ijp7InVyaSI6WyJzaXA6YWxpY2VAZXhhbXBsZS5jb20iXX0sImlhdCI6IjE0NDMyMDgzNDUiLCJvcmlnIjp7InRuIjoiMTIxNTU1NTEyMTIifX0.rq3pjT1hoRwakEGjHCnWSwUnshd0zJ6F1VOgFWSjHBr8QjpjlkcpFYpFYsojNCpTzO3QfPOlckGaS6hEck7wwd;info=<https://biloxi.example.org/biloxi.cert>
 CSeq: [cseq] INVITE
 Contact: sip:[$calling_party]@[local_ip]:[local_port]

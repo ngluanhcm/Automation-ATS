@@ -6,20 +6,22 @@ use warnings;
       
 use Log::Log4perl qw(get_logger :levels);
 
-use QATEST::C20_EO::ADQ768::ADQ768; 
+use QATEST::C20_EO::Luan::Automation_ATS::DEAP::DEAP; 
 
 #####################################
 # TESTS
 #####################################
 
 our $TESTSUITE;
+
+
 $TESTSUITE->{TESTED_RELEASE} = "V04.02.03";
 $TESTSUITE->{BUILD_VERSION} = "A624";
-$TESTSUITE->{PATH} = '/home/ptthuy/ats_user/logs/'.$TESTSUITE->{TESTED_RELEASE};   # CGE Log Path to Store Server logs and Core Files. 
+$TESTSUITE->{PATH} = '/home/ylethingoc/ats_user/logs/'.$TESTSUITE->{TESTED_RELEASE};   # CGE Log Path to Store Server logs and Core Files. 
 
 # NOTE: Email ID of test suite executer is added by default.
 $TESTSUITE->{EMAIL_LIST}	= [
-    'nhtai2@tma.com.vn',
+    'ntluan2@tma.com.vn'
 ];   # Email Group
 
 
@@ -33,7 +35,9 @@ print "************  EMAIL_LIST ==> @emailList\n";
 #####################################
 # EXECUTION OF TESTS
 #####################################
-# , "ADQ768"
-&QATEST::C20_EO::ADQ768::ADQ768::runTests;  ################  For running all tests #########################
-# &QATEST::C20_EO::ADQ768::ADQ768::runTests("ADQ768_001");  ################  For running selective tests ##########################
+
+&QATEST::C20_EO::Luan::Automation_ATS::DEAP::DEAP::runTests;  ################  For running all tests #########################
+
+#&QATEST::C20_EO::Luan::Automation_ATS::DEAP::DEAP::runTests("TC5");  ################  For running selective tests #########################
+
 1;
