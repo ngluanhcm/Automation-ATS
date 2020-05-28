@@ -349,7 +349,6 @@ sub tms1243150 { #ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Serv
         print FH "STEP:  new line - PASS\n";
     }
 
-
 # # Add SDN to line A
 #     unless ($ses_core->callFeature(-featureName => "SDN $sdn_num 2 E \$", -dialNumber => $list_dn[0], -deleteFeature => 'No')) {
 # 		$logger->error(__PACKAGE__ . " $tcid: Cannot add SDN for line $list_dn[0]");

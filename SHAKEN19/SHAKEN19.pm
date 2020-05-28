@@ -388,6 +388,48 @@ sub table_ofcvar_default{
     }
 }
 
+sub changecsvfileA {
+    my $subname = "changecsvfileA";
+    $logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
+    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
+			  -replacement => { 1 => $userA,
+				                2 => $userB,
+								3 => $userC,
+                                        }
+                                     );
+    unless($soapui->modifyCSVfile(%input)){
+	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
+	print FH "STEP: Modify CSV A- FAILED\n";
+	return 0;              
+    } else {
+       print FH "STEP: Modify CSV A- PASSED\n";
+    }
+    return 1;
+}
+
+sub RUN_SIPP {
+    $logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
+    $SIPp_A->execCmd("cd $SIPp_folder");
+    $SIPp_A->{CMDERRORFLAG} = 0;
+}
+
+sub ACallBViaSSTBySipp{
+    my ($ipsst, $SIPp_folder_file, $ipats, $namexml ) = (@_);
+    my $subname = "ACallBViaSSTBySipp";
+
+    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/$namexml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
+	$SIPp_A->startCustomClient($SIPp_A_cmd);
+	unless($SIPp_A->waitCompletionClient()){
+		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
+		print FH "STEP: Make call SIPp_A script - FAILED\n";
+		return 0;
+	} else {
+		print FH "STEP: Make call SIPp_A script - PASSED\n";
+		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
+	}
+
+}
+
 ##################################################################################
 # TESTS                                                                          #
 ##################################################################################
@@ -899,7 +941,6 @@ sub tms1286667 { #Provisioning_office parameters datafil control STRSHKN_Verstat
     }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
-    $ses_core->execCmd("\x03");
     $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
 ################################## Cleanup tms1286667 ##################################
     CLEANUP:
@@ -2459,6 +2500,7 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
+
 # Execute warm swact SST during Call
 	# Login cli mode from CLI session
     $ses_core->execCmd("logout");
@@ -7832,36 +7874,11 @@ sub tms1286694 { #Verify Verstat results shall be configurable based on the atte
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286694.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286694.xml");
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8093,36 +8110,11 @@ sub tms1286695 { #Verify Verstat results shall be configurable based on the atte
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286695.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286695.xml");
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8356,36 +8348,11 @@ sub tms1286696 { #Verify Verstat results shall be configurable based on the atte
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286696.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286696.xml");
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8619,36 +8586,11 @@ sub tms1286697 { #Verify Verstat results shall be configurable based on the atte
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286697.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286697.xml");
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8883,36 +8825,11 @@ sub tms1286698 { #Verify Verstat results shall be configurable based on the atte
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286698.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286698.xml");
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -9145,36 +9062,11 @@ sub tms1286699 { #Verify Verstat results shall be configurable based on the atte
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286699.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286699.xml");
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -12697,36 +12589,11 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286694.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286694.xml");
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
@@ -12988,36 +12855,11 @@ sub tms1286713 { #OM_Verify New OM STRSHKN values : VFAILED
     }
     $calltrak_start = 1;
 # changecsvfileA
-	$logger->debug(__PACKAGE__ . ": ###################### Change CSV A ##########################");
-    %input = (-csvFile => "$SIPp_folder_file/kbs_A.csv",
-			  -replacement => { 1 => $userA,
-				                2 => $userB,
-								3 => $userC,
-                                        }
-                                     );
-    unless($soapui->modifyCSVfile(%input)){
-	$logger->error(__PACKAGE__ . ": Could not modify CSV A}");
-	print FH "STEP: Modify CSV A- FAILED\n";
-	return 0;              
-    } else {
-       print FH "STEP: Modify CSV A- PASSED\n";
-    }
+    $result = &changecsvfileA();
 # RUN SIPP
-	$logger->info(__PACKAGE__ ."########################## RUN SIPP #################################" );
-    $SIPp_A->execCmd("cd $SIPp_folder");
-    $SIPp_A->{CMDERRORFLAG} = 0;
-
+    $result = &RUN_SIPP();
 # A calls B via trunk and hears ringback then B ring via sipp
-    $SIPp_A_cmd = "./sipp $ipsst -p 5060 -sf $SIPp_folder_file/tms1286697.xml -i $ipats -m 1 -inf $SIPp_folder_file/kbs_A.csv";
-	$SIPp_A->startCustomClient($SIPp_A_cmd);
-	unless($SIPp_A->waitCompletionClient()){
-		$logger->error(__PACKAGE__ . ": SIPp_A script is FAILED "),
-		print FH "STEP: Make call SIPp_A script - FAILED\n";
-		$result = 0;
-	} else {
-		print FH "STEP: Make call SIPp_A script - PASSED\n";
-		$logger->error(__PACKAGE__ . "STEP: Make call SIPp_A script - PASSED\n");
-	}
+    $result = &ACallBViaSSTBySipp($ipsst, $SIPp_folder_file, $ipats, "tms1286697.xml");
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     print Dumper \$output[-3];

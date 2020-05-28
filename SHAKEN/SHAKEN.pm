@@ -2,7 +2,7 @@
 #FEATURE                : <SHAKEN> 
 #FEATURE ENGINEER       : <FEATURE ENGINEER NAME>
 #AUTOMATION ENGINEER    : <LUAN NGUYEN THANH>
-#cd /home/ylethingoc/ats_repos/lib/perl/QATEST/C20_EO/Luan/Automation-ATS/SHAKEN/
+#cd /home/ylethingoc/ats_repos/lib/perl/QATEST/C20_EO/Luan/Automation_ATS/SHAKEN/
 #/usr/bin/runtest.sh `pwd` 
 #perl -cw SHAKEN.pm
 #**************************************************************************************************#
@@ -10,7 +10,7 @@
 our %TESTBED;
 our $TESTSUITE;
 
-package QATEST::C20_EO::Luan::Automation-ATS::SHAKEN::SHAKEN; 
+package QATEST::C20_EO::Luan::Automation_ATS::SHAKEN::SHAKEN; 
 
 use strict;
 use Tie::File;
