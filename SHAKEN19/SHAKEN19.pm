@@ -9660,7 +9660,7 @@ sub tms1286702 { #While STRSHKN_Pass_Verstat is N, make sure the feature is NOT 
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
+        if ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
             #grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
             $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
             $result = 0;
@@ -9956,7 +9956,7 @@ sub tms1286703 { #While STRSHKN_Build_Pass_Verstat is N, make sure the feature i
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
+        if ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
             #grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
             $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
             $result = 0;
@@ -10435,7 +10435,7 @@ sub tms1286706 { #Checking StrShkn Verstat OMs to be pegged properly for non-loc
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
+        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs)) {
             #grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
             $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
             $result = 0;
@@ -10514,8 +10514,8 @@ sub tms1286707 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my $flag = 1;
-    my $ATTESTB;
-    my $ATTESTB1;
+    my $ATTESTA;
+    my $ATTESTA1;
     my (@list_file_name, $dialed_num, @callTrakLogs );
     
 ################################# LOGIN #######################################
@@ -10697,7 +10697,7 @@ sub tms1286707 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
         if ($_ =~ /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
-            $ATTESTB = $1;
+            $ATTESTA = $1;
         }
     }
 # A calls B via trunk and hears ringback then B ring and check speech path
@@ -10734,14 +10734,14 @@ sub tms1286707 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
         if ($_ =~ /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
-            $ATTESTB1 = $1;
+            $ATTESTA1 = $1;
             last;
         }
     }
-    if($ATTESTB != $ATTESTB1){
-        print FH "STEP: ATTESTB ++  - PASS\n";
+    if($ATTESTA != $ATTESTA1){
+        print FH "STEP: ATTESTA ++  - PASS\n";
     }else{
-        print FH "STEP: ATTESTB ++  - FAIL\n";
+        print FH "STEP: ATTESTA ++  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     }
@@ -10755,7 +10755,7 @@ sub tms1286707 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
+        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs)) {
             #grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
             $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
             $result = 0;
@@ -10834,8 +10834,8 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my $flag = 1;
-    my $ATTESTB;
-    my $ATTESTB1;
+    my $ATTESTA;
+    my $ATTESTA1;
     my (@list_file_name, $dialed_num, @callTrakLogs );
     
 ################################# LOGIN #######################################
@@ -11017,7 +11017,7 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
         if ($_ =~ /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
-            $ATTESTB = $1;
+            $ATTESTA = $1;
         }
     }
 # A calls B via trunk and hears ringback then B ring and check speech path
@@ -11054,14 +11054,14 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
         if ($_ =~ /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
-            $ATTESTB1 = $1;
+            $ATTESTA1 = $1;
             last;
         }
     }
-    if($ATTESTB != $ATTESTB1){
-        print FH "STEP: ATTESTB ++  - PASS\n";
+    if($ATTESTA != $ATTESTA1){
+        print FH "STEP: ATTESTA ++  - PASS\n";
     }else{
-        print FH "STEP: ATTESTB ++  - FAIL\n";
+        print FH "STEP: ATTESTA ++  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     }
@@ -11075,7 +11075,7 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
+        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs)) {
             #grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
             $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
             $result = 0;
@@ -12035,7 +12035,7 @@ sub tms1286711 { #OM_Verify New OM STRSHKN values : VERSTATC
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+B/, @callTrakLogs)) {
+        unless ((grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs)) {
             #grep /DATA CHARS\s+:\s+/, @callTrakLogs) and (grep /STRSHKN_ATTESTATION\s+:\s+A/, @callTrakLogs) and (grep /STRSHKN_VERSTAT\s+:\s+NOINFO/, @callTrakLogs
             $logger->error(__PACKAGE__ . " $tcid: STRSHKN_IE IE is not generated on calltraklogs ");
             $result = 0;

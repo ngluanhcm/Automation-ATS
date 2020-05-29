@@ -1268,13 +1268,26 @@ sub addLineGroupDNH {
             $flag = 0;
             last;
         }
-        $line_info{$_} = {
+
+        if (grep /XLAPLAN KEY/, @qdn_result) {
+            $line_info{$_} = {
                             -lcc => $lcc,
                             -custgrp => $custgrp,
                             -subgrp => $subgrp,
                             -ncos => $ncos,
-                            -len => $len
+                            -len => $len,
+                            -lata => 'NILLATA 0'
                          };
+        } else {
+            $line_info{$_} = {
+                            -lcc => $lcc,
+                            -custgrp => $custgrp,
+                            -subgrp => $subgrp,
+                            -ncos => $ncos,
+                            -len => $len,
+                            -lata => ''
+                         };
+        }
 
         if (grep /ERROR|INCONSISTENT DATA/, $self->execCmd("out \$ $_ $len bldn y y")) {
             foreach ('abort','quit all') {
@@ -1301,7 +1314,7 @@ sub addLineGroupDNH {
 
     # add line to DNH group
     my $pilot_dn = $args{-pilotDN};
-    my $est_cmd = "est \$ DNH $pilot_dn $line_info{$pilot_dn}{-lcc} $line_info{$pilot_dn}{-custgrp} $line_info{$pilot_dn}{-subgrp} $line_info{$pilot_dn}{-ncos} $line_info{$pilot_dn}{-len} +";
+    my $est_cmd = "est \$ DNH $pilot_dn $line_info{$pilot_dn}{-lcc} $line_info{$pilot_dn}{-custgrp} $line_info{$pilot_dn}{-subgrp} $line_info{$pilot_dn}{-ncos} $line_info{$pilot_dn}{-lata} $line_info{$pilot_dn}{-len} +";
     unless($self->execCmd("$est_cmd")) {
         $logger->error(__PACKAGE__ . ".$sub_name: Cannot execute command 'est .... +' ");
         $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving Sub [0]");
@@ -1334,6 +1347,7 @@ sub addLineGroupDNH {
     $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving Sub [1]");
     return 1;
 }
+
 
 =head2 B<getDISAnMONAnumber()>
 
@@ -3936,6 +3950,254 @@ sub coldSwactGWC {
     return 1;
 }
 
+=head2 B<loginNPM()>
+
+    This function is used to login NPM mode. This also does switch unit if cannot execute "NPM" command
+
+=over 6
+
+=item Arguments:
+
+ Mandatory:
+        - username
+		- password
+
+=item Returns:
+
+        Returns 1 - If Passed
+        Returns 0 - If Failed
+
+=item Example:
+
+        $obj->loginNPM(-user => 'cmtg', -pwd => 'cmtg');
+
+=back
+
+=cut
+
+sub loginNPM {
+    my ($self, %args) = @_;
+    my $sub_name = "loginNPM";
+    my $logger = Log::Log4perl->get_logger(__PACKAGE__ . ".$sub_name");
+    $logger->debug(__PACKAGE__ . ".$sub_name: --> Entered Sub");
+
+    my ($unit,$cur_dir,@output,$cmd);
+	
+	my $flag = 1;
+    foreach ('-user', '-pwd') {
+        unless ($args{$_}) {
+            $logger->error(__PACKAGE__ . ".$sub_name: Mandatory parameter '$_' not present");
+            $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]" );
+            $flag = 0;
+            last;
+        }
+    }
+    return 0 unless($flag); 
+
+    unless (grep /\/root/, @output = $self->execCmd("pwd")) {
+        foreach (@output) {
+            if (/(\/[\w\/]+)/) {
+                $cur_dir = $1;
+                last;
+            }
+        }
+    }
+
+    $self->{conn}->prompt('/(>\s?$)|(login:\s?$)|(assword:\s?$)/');
+	unless (@output = $self->execCmd("npm")) {
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to execute 'npm'");
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+    unless (grep /Enter the NPM/, @output) {
+        foreach (@output) {
+            if (/-unit(\d):/) {
+                $unit = $1;
+				last;
+            }
+        }
+        if ($unit eq '0') {
+            $cmd = "t1";
+        } elsif ($unit eq '1') {
+            $cmd = "t0";
+        } else {
+            $logger->error(__PACKAGE__ . ".$sub_name: Fail to get current unit of lab");
+            $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+            return 0;
+        }
+        
+        $self->execCmd($cmd);
+        if ($cur_dir) {
+            $self->execCmd("cd $cur_dir");
+        }
+
+		unless (@output = $self->execCmd("npm")) {
+			$logger->error(__PACKAGE__ . ".$sub_name: Fail to execute 'npm' after switching unit");
+			$logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+			return 0;
+		}
+        unless (grep /Enter the NPM/, @output) {
+            $logger->error(__PACKAGE__ . ".$sub_name: Fail to access NPM after switching unit");
+            $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+            return 0;
+        }
+    }
+
+    $self->execCmd($args{-user});
+    @output = $self->execCmd($args{-pwd});
+    if (grep /Invalid UserId\/Password/, @output) {
+        $self->{conn}->print("\x03");
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to login info is wrong");
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+    unless (grep /Entering shell mode/, @output) {
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to login NPM");
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+
+    $self->{conn}->prompt('/.*[\$#\>\]]\s?$/');
+    $logger->debug(__PACKAGE__ . ".$sub_name: Login NPM successfully");
+    $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [1]");
+    return 1;
+}
+
+=head2 B<loginOssgate()>
+
+    This function is used to login cmtg Ossgate.
+
+=over 6
+
+=item Arguments:
+
+ Mandatory:
+        - username
+		- password
+
+=item Returns:
+
+        Returns 1 - If Passed
+        Returns 0 - If Failed
+
+=item Example:
+
+        $obj->loginOssgate(-user => 'cmtg', -pwd => 'cmtg');
+
+=back
+
+=cut
+
+sub loginOssgate {
+    my ($self, %args) = @_;
+    my $sub_name = "loginOssgate";
+    my $logger = Log::Log4perl->get_logger(__PACKAGE__ . ".$sub_name");
+    $logger->debug(__PACKAGE__ . ".$sub_name: --> Entered Sub");
+	my @output;
+	my $flag = 1;
+    foreach ('-user', '-pwd') {
+        unless ($args{$_}) {
+            $logger->error(__PACKAGE__ . ".$sub_name: Mandatory parameter '$_' not present");
+            $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]" );
+            $flag = 0;
+            last;
+        }
+    }
+    return 0 unless($flag); 
+
+    unless (grep /Enter username and password/, @output = $self->execCmd("telnet cmtg 10023")) {
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to execute 'telnet cmtg 10023'");
+        $logger->error(__PACKAGE__ . ".$sub_name: Failed output: ".Dumper(\@output));
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+
+    unless (grep /CMTg-OSS Gateway/, @output = $self->execCmd("$args{-user} $args{-pwd}")) {
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to execute 'telnet cmtg 10023'");
+        $logger->error(__PACKAGE__ . ".$sub_name: Failed output: ".Dumper(\@output));
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+
+    $logger->debug(__PACKAGE__ . ".$sub_name: Login CMTg-OSS Gateway successfully");
+    $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [1]");
+    return 1;
+}
+
+=head2 B<loginBPT()>
+
+    This function is used to login BPT mode.
+
+=over 6
+
+=item Arguments:
+
+ Mandatory:
+        - username
+		- password
+
+=item Returns:
+
+        Returns 1 - If Passed
+        Returns 0 - If Failed
+
+=item Example:
+
+        $obj->loginBPT(-user => 'cmtg', -pwd => 'cmtg');
+
+=back
+
+=cut
+
+sub loginBPT {
+    my ($self, %args) = @_;
+    my $sub_name = "loginOssgate";
+    my $logger = Log::Log4perl->get_logger(__PACKAGE__ . ".$sub_name");
+    $logger->debug(__PACKAGE__ . ".$sub_name: --> Entered Sub");
+	
+	my @output;
+	my $flag = 1;
+    foreach ('-user', '-pwd') {
+        unless ($args{$_}) {
+            $logger->error(__PACKAGE__ . ".$sub_name: Mandatory parameter '$_' not present");
+            $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]" );
+            $flag = 0;
+            last;
+        }
+    }
+    return 0 unless($flag); 
+
+	unless ($self->execCmd("cli")) {
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to execute cli");
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+
+    $self->{conn}->prompt('/([>\]]\s?$)|(Username:\s?$)|(assword:\s?$)/');
+    unless (grep /Batch Provisioning Tool/, $self->execCmd("c20mm cmtg bpt")) {
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to access BPT");
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+
+    $self->execCmd($args{-user});
+    @output = $self->execCmd($args{-pwd});
+    if (grep /Invalid Username \/ Password \/ Unauthorized Group/, @output) {
+        $self->{conn}->print("\x03");
+        $logger->error(__PACKAGE__ . ".$sub_name: Login info is wrong");
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+    unless (grep /You are currently logged in as : $args{-user}/, @output) {
+        $logger->error(__PACKAGE__ . ".$sub_name: Fail to login BPT");
+        $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
+        return 0;
+    }
+
+    $logger->debug(__PACKAGE__ . ".$sub_name: Login BPT successfully");
+    $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [1]");
+    return 1;
+}
 
 =head2 B<startCalltrak()>
 
@@ -4096,7 +4358,7 @@ sub startCalltrak {
         $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
         return 0;
     }
-    
+    sleep(3);
     unless (grep /Tracing started/, $self->execCmd("y")) {
         $logger->error(__PACKAGE__ . ".$sub_name: Cannot start tracing ");
         $logger->debug(__PACKAGE__ . ".$sub_name: <-- Leaving sub [0]");
