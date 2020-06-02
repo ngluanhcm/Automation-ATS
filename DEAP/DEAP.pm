@@ -135,7 +135,7 @@ our %db_line = (
 
                 );
 
-our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
+our %tc_line = (
                 'tms1243150' => ['gr303_1','gr303_2'],
                 'tms1243135' => ['sip_1','gr303_1'],
                 'tms1243136' => ['sip_1','gr303_1'],
@@ -296,9 +296,10 @@ sub tms1243150 { #ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Serv
     my $initialize_done = 0;
     my $logutil_start = 0;
     my $calltrak_start = 0;
-    my ($dialed_num, @callTrakLogs );
+    my ($dialed_num, @callTrakLogs, $ses_core1);
     my $sdn_num = 2124418765;
-    
+    my $passed = 0;
+    my $add_feature_lineA = 0;
 ################################# LOGIN #######################################
     unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
         $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
@@ -308,14 +309,22 @@ sub tms1243150 { #ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Serv
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    # unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..5]], -password => [@{$core_account{-password}}[2..5]])) {
-	# 	$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-	# 	print FH "STEP: Login TMA15 core - FAIL\n";
-    #     $result = 0;
-    #     goto CLEANUP;
-    # } else {
-    #     print FH "STEP: Login TMA15 core - PASS\n";
-    # }
+    unless ($ses_core1 = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 - PASS\n";
+    }
+    unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..5]], -password => [@{$core_account{-password}}[2..5]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core - PASS\n";
+    }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # Add SDN to line A
     unless ($ses_core->callFeature(-featureName => "SDN $sdn_num 2 E \$", -dialNumber => $list_dn[0], -deleteFeature => 'No')) {
@@ -329,9 +338,34 @@ sub tms1243150 { #ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Serv
     $add_feature_lineA = 1;
 
 ###################### Call flow ###########################
-
-
-
+#telnet cmtg 10023
+	$ses_core1->{conn}->print("telnet cmtg 10023\n");
+    sleep(5);
+    $ses_core1->execCmd("cmtg tma15\@11\n");
+	unless ($ses_core1->{conn}->waitfor(-match => '/logged in/')){
+		$logger->error(__PACKAGE__ . ": The input password is incorect, fail to login ossgate ");
+		print FH "STEP: Login into ossgate  fail - FAIL\n";
+		return 0;
+	} else {
+		$logger->debug(__PACKAGE__ . ": Successfully login into to ossgate");
+		print FH "STEP: Login into ossgate  pass - PASS\n";
+	}
+#prompt
+    $ses_core1->{conn}->prompt('/TOTAL COUNT OF WORKING DN/'); # prevPrompt is /.*[\$%#\}\|\>\]].*$/
+#qdnwrk 
+    my @output =  $ses_core1->execCmd("QDNWRK ALL IBN \$ D",1000);
+    foreach (@output) {
+        if (/Teen Service Secondary DN/) {
+            print FH "STEP: Teen Service Secondary DN - PASS\n";
+            $passed = 1;
+            last;
+        }
+    }
+    if($passed==0){
+        print FH "STEP: Teen Service Secondary DN - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    }
 
 ################################## Cleanup tms1243150 ##################################
     CLEANUP:
