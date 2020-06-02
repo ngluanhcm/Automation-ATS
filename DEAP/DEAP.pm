@@ -90,18 +90,18 @@ $gwc_id = 13; #GWC gr303
  
 # Line Info
 our %db_line = (
-                'IBN_1' => {
+                'gr303_1' => {
                             -line => 48,
-                            -dn => 2127105777,
+                            -dn => 2124414010,
                             -region => 'US',
-                            -len => 'C985 00 0 07 77',
+                            -len => 'AZTK   00 9 00 01',
                             -info => 'IBN AUTO_GRP 0 0 NILLATA 0',
                             },
-                'IBN_2' => {
+                'gr303_2' => {
                             -line => 47,
-                            -dn => 2127105778,
+                            -dn => 2124414011,
                             -region => 'US',
-                            -len => 'C985 00 0 07 78',
+                            -len => 'AZTK   00 9 00 02',
                             -info => 'IBN AUTO_GRP 0 0 NILLATA 0',
                             },
                 'pbx' => {#pbx
@@ -136,7 +136,7 @@ our %db_line = (
                 );
 
 our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
-                'tms1243150' => ['IBN_1','IBN_2'],
+                'tms1243150' => ['gr303_1','gr303_2'],
                 'tms1243135' => ['sip_1','gr303_1'],
                 'tms1243136' => ['sip_1','gr303_1'],
                 'tms1309895' => ['sip_1','gr303_1'],
@@ -297,6 +297,7 @@ sub tms1243150 { #ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Serv
     my $logutil_start = 0;
     my $calltrak_start = 0;
     my ($dialed_num, @callTrakLogs );
+    my $sdn_num = 2124418765;
     
 ################################# LOGIN #######################################
     unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
@@ -307,64 +308,44 @@ sub tms1243150 { #ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Serv
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..5]], -password => [@{$core_account{-password}}[2..5]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core - PASS\n";
-    }
+    # unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..5]], -password => [@{$core_account{-password}}[2..5]])) {
+	# 	$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+	# 	print FH "STEP: Login TMA15 core - FAIL\n";
+    #     $result = 0;
+    #     goto CLEANUP;
+    # } else {
+    #     print FH "STEP: Login TMA15 core - PASS\n";
+    # }
 ############### Test Specific configuration & Test Tool Script Execution #################
-# out line status
-    for (my $i = 0; $i <= $#list_dn; $i++){
-        %input = (
-                    -function => ['OUT',''], 
-                    -lineDN => $list_dn[$i], 
-                    -lineType => '', 
-                    -len => '', 
-                    -lineInfo => $list_line_info[$i]
-                );
-        unless ($ses_core->resetLine(%input)) {
-            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] cannot reset");
-            print FH "STEP: Reset line $list_dn[$i] - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: Reset line $list_dn[$i] - PASS\n";
-        }
-		
-    }
-    unless ($flag){
-        $result = 0;
-        goto CLEANUP;
-    }
- 	
-    unless (grep /JOURNAL/, $ses_core->execCmd("new \$ $list_dn[1] IBN NY_PUB 0 0 212 NILLATA 0 $list_len[0] DGT \$ y")) {
-        $logger->error(__PACKAGE__ . " $tcid: new line PASS");
-        print FH "STEP:  new line - FAIL\n";
+# Add SDN to line A
+    unless ($ses_core->callFeature(-featureName => "SDN $sdn_num 2 E \$", -dialNumber => $list_dn[0], -deleteFeature => 'No')) {
+		$logger->error(__PACKAGE__ . " $tcid: Cannot add SDN for line $list_dn[0]");
+		print FH "STEP: add SDN for line $list_dn[0] - FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
-        print FH "STEP:  new line - PASS\n";
+        print FH "STEP: add SDN for line $list_dn[0] - PASS\n";
     }
+    $add_feature_lineA = 1;
 
-# # Add SDN to line A
-#     unless ($ses_core->callFeature(-featureName => "SDN $sdn_num 2 E \$", -dialNumber => $list_dn[0], -deleteFeature => 'No')) {
-# 		$logger->error(__PACKAGE__ . " $tcid: Cannot add SDN for line $list_dn[0]");
-# 		print FH "STEP: add SDN for line $list_dn[0] - FAIL\n";
-#         $result = 0;
-#         goto CLEANUP;
-#     } else {
-#         print FH "STEP: add SDN for line $list_dn[0] - PASS\n";
-#     }
-#     $add_feature_lineA = 1;
+###################### Call flow ###########################
+
 
 
 
 ################################## Cleanup tms1243150 ##################################
     CLEANUP:
     $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1243150 ##################################");
+
+    # Remove service from line A
+    if ($add_feature_lineA) {
+        unless ($ses_core->callFeature(-featureName => "SDN $sdn_num", -dialNumber => $list_dn[0], -deleteFeature => 'Yes')) {
+            $logger->error(__PACKAGE__ . " $tcid: Remove SDN from line $list_dn[0]");
+            print FH "STEP: Remove SDN from line $list_dn[0] - FAIL\n";
+        } else {
+            print FH "STEP: Remove SDN from line $list_dn[0] - PASS\n";
+        }
+    }
 
     close(FH);
     &Luan_cleanup();

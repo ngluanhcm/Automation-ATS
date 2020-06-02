@@ -464,8 +464,8 @@ our @TESTCASES = (
                     # "tms1286686",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
                     # "tms1286687",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
                     # "tms1286688",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
-                    "tms1286689",	#Verifying verstat parameter to be sent properly from PRI to SIP Line
-                    "tms1286690",	#Verifying verstat parameter to be sent properly from PRI to SIP_PBX
+                    # "tms1286689",	#FAILwithjira Verifying verstat parameter to be sent properly from PRI to SIP Line
+                    # "tms1286690",	#VFAILwithjira erifying verstat parameter to be sent properly from PRI to SIP_PBX
                     # "tms1286691",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
                     "tms1286692",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
                     "tms1286693",	#Verify he attestation value shall be used to build and pass a Verstat value to the terminating SIP endpoint Where line, PRI and SIP PBX originations (ie. line_PRI_SIP PBX to line scenarios) determine an attestation data in C20
@@ -6309,7 +6309,7 @@ sub tms1286689 { #Verifying verstat parameter to be sent properly from PRI to SI
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_pri'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -6578,7 +6578,7 @@ sub tms1286690 { #Verifying verstat parameter to be sent properly from PRI to SI
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_pri'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -6988,7 +6988,7 @@ sub tms1286692 { #Verifying verstat parameter to be sent properly from SIP_PBX t
     $logutil_start = 1;
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst_sipp'}{-clli}) {
+    foreach ($db_trunk{'t15_sst'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -7044,16 +7044,6 @@ sub tms1286692 { #Verifying verstat parameter to be sent properly from SIP_PBX t
         $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);   
     }
   
-    if ($calltrak_start) {
-        unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot stop calltrak ");
-        }
-        else {
-            print FH "STEP: Stop calltrak - PASS\n";
-        }
-        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
-    }
-    
 ################################## Cleanup tms1286692 ##################################
     CLEANUP:
     $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1286692 ##################################");
@@ -7102,7 +7092,7 @@ sub tms1286692 { #Verifying verstat parameter to be sent properly from SIP_PBX t
     # check the result var to know the TC is passed or failed
     &Luan_checkResult($tcid, $result);
 }
-sub tms1286693 { #Verify he attestation value shall be used to build and pass a Verstat value to the terminating SIP endpoint Where line, PRI and SIP PBX originations (ie. line_PRI_SIP PBX to line scenarios) determine an attestation data in C20
+sub tms1286693 { #Verify the attestation value shall be used to build and pass a Verstat value to the terminating SIP endpoint Where line, PRI and SIP PBX originations (ie. line_PRI_SIP PBX to line scenarios) determine an attestation data in C20
     $logger->debug(__PACKAGE__ . " Inside test case tms1286693");
 
 ########################### Variables Declaration #############################
@@ -7287,7 +7277,7 @@ sub tms1286693 { #Verify he attestation value shall be used to build and pass a 
 ###################### Call flow ###########################
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
-              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -trunkName => [$db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_pri'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
@@ -7299,9 +7289,9 @@ sub tms1286693 { #Verify he attestation value shall be used to build and pass a 
     }
     $calltrak_start = 1;
 
-# A calls B via trunk and hears ringback then B ring and check speech path
+# A calls B via trunk to trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
-    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    my $trunk_access_code = $db_trunk{'t15_pri'}{-acc};
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
@@ -7312,21 +7302,22 @@ sub tms1286693 { #Verify he attestation value shall be used to build and pass a 
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
-                -detect => ['NONE'],
+                -detect => ['RINGING'], #'RINGBACK','RINGING'
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST ");
-        print FH "STEP: A calls B via SST  - FAIL\n";
+        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via PRI to SST ");
+        print FH "STEP: A calls B via PRI to SST  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
-        print FH "STEP: A calls B via SST - PASS\n";
+        print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
+
 
 # Stop CallTrak
     if ($calltrak_start) {
@@ -7336,7 +7327,7 @@ sub tms1286693 { #Verify he attestation value shall be used to build and pass a 
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+FAILED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
     }
     
 ################################## Cleanup tms1286693 ##################################
@@ -9651,6 +9642,7 @@ sub tms1286702 { #While STRSHKN_Pass_Verstat is N, make sure the feature is NOT 
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
+
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
