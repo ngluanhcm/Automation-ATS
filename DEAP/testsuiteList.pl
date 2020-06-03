@@ -17,7 +17,7 @@ our $TESTSUITE;
 
 $TESTSUITE->{TESTED_RELEASE} = "V04.02.03";
 $TESTSUITE->{BUILD_VERSION} = "A624";
-$TESTSUITE->{PATH} = '/home/ylethingoc/ats_user/logs/'.$TESTSUITE->{TESTED_RELEASE};   # CGE Log Path to Store Server logs and Core Files. 
+$TESTSUITE->{PATH} = '/home/ylethingoc/ats_user/logs/DEAP'.$TESTSUITE->{TESTED_RELEASE};   # CGE Log Path to Store Server logs and Core Files. 
 
 # NOTE: Email ID of test suite executer is added by default.
 $TESTSUITE->{EMAIL_LIST}	= [

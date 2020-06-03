@@ -4773,11 +4773,11 @@ sub TC28 { #Orig_ID_Verify For the originating trunk group, a unique Orig-ID val
     # } else {
     #     print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
     # }
-    # config table OFRT
+# config table OFRT
     unless (grep /TABLE:.*OFRT/, $ses_core->execCmd("table OFRT")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table OFRT' ");
     }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos $db_trunk{'t15_pri'}{-acc}")) {
+    unless (grep /$db_trunk{'t15_pri'}{-clli}/, $ses_core->execCmd("pos $db_trunk{'t15_pri'}{-acc}")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos $db_trunk{'t15_pri'}{-acc}' ");
     }
     foreach ('cha','N','D',$db_trunk{'t15_pri'}{-clli},'3','775','n','$','$','y') {
