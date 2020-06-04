@@ -27,5 +27,5 @@
 our @TESTBED = (
         "GLCAS_Server53",
         "TMA15_Lu",
-        # "TMA20_TA",
+        "TMA20_LAB",
         );
