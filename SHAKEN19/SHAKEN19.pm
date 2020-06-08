@@ -847,7 +847,9 @@ sub tms1286666 { #Provisioning_Enable Disable SOC CS2C0009
         if (grep /Done/, $ses_core->execCmd("assign rtu JFCM9397UKE4YRCGBWGZ to CS2C0009")) {            
                 print FH "STEP: Enable rtu  CS2C0009 - PASS \n";         
         }else{
-        print FH "STEP: Enable rtu  CS2C0009 - Failed \n";
+            print FH "STEP: Enable rtu  CS2C0009 - Failed \n";
+            $result = 0;
+            goto CLEANUP;
         }
         if (grep /enabled/, $ses_core->execCmd("assign STATE ON to CS2C0009")) {            
                 print FH "STEP: Enable option CS2C0009 - PASS \n";         
@@ -2120,7 +2122,8 @@ sub tms1286677 { #GWC warm swact during signaling association ,callp no dropped 
 			print FH "The unit active on GWC-$gwc_id is: $unit_active\n";
 		} 
 	}
-    unless ($unit_active) {
+    unless ($unit_active ne "") {
+        $logger->debug(__PACKAGE__ . ": Can't get unit active");
         print FH "Can't get unit active \n";
         $result = 0;
         goto CLEANUP;
@@ -2538,7 +2541,8 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
 			print FH "The unit active on GWC-$gwc_id is: $unit_active\n";
 		} 
 	}
-    unless ($unit_active) {
+    unless ($unit_active ne "") {
+        $logger->debug(__PACKAGE__ . ": Can't get unit active");
         print FH "Can't get unit active \n";
         $result = 0;
         goto CLEANUP;
@@ -3410,6 +3414,7 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
 	}
 	
 	$ses_core->{conn}->print("y");
+    $logger->debug(__PACKAGE__ . ": Wait 200s cold-swact gwc$gwc_id ");
 	sleep (200);
 	
 	# Check status of unit active after swact 
@@ -3826,6 +3831,7 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
 	}
 	
 	$ses_core->{conn}->print("y");
+    $logger->debug(__PACKAGE__ . ": Wait 200s cold-swact cold-swact sst000");
 	sleep (200);
 	
 	# Check status of unit active after swact 
