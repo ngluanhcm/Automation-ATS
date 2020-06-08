@@ -222,7 +222,7 @@ our @TESTCASES = (
                     # "tms1243135",	#AKF-40036 - Verify the test call from TD trunk ATC to the line with RSUS OPRT option
                     # "tms1243136",	#AKF-40309 - Provision TTU Circuit as IBERT Tester in table FMRESINV
                     # "tms1309895",	#AKF-40665- Verify the Core Rex Test and GWC Rex Test can not run at the same time
-                    "tms1309896",	#AKF-40375 Verify AMA Billing Module Code 130 Facility Release field has correct values
+                    # "tms1309896",	#AKF-40375 Verify AMA Billing Module Code 130 Facility Release field has correct values
                     # "tms1309897",	#AKF-40363 - Verify calling party number is displayed on phone via PRI trunk
                    
                 );
@@ -733,7 +733,7 @@ sub tms1243136 { #AKF-40309 - Provision TTU Circuit as IBERT Tester in table FMR
 # check TRKMEM TTU 
     unless (grep /TRKMEM\s+TTU/, $ses_core->execCmd("clliref search ttu")) {
         $logger->error(__PACKAGE__ . " $tcid: missing trunk mem ttu");
-        print FH "STEP: check trunk mem ttu (should add TTU 0 0 RMM 4 2 and TTU 0 0 RMM 4 3 - FAIL\n";
+        print FH "STEP: check trunk mem ttu (should add TTU 0 0 RMM 4 2 and TTU 0 0 RMM 4 3 )- FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
@@ -1592,9 +1592,9 @@ sub tms1309897 { #AKF-40363 - Verify calling party number is displayed on phone 
             }
         }
         unless ($exist1) {
-            print FH "STEP: Check the message cg\/dt on tapi log - PASSED\n";
+            print FH "STEP: Check the message calling party number  on tapi log - PASSED\n";
         } else {
-            print FH "STEP: Check the message cg\/dt on tapi log - FAILED\n";
+            print FH "STEP: Check the message calling party number  on tapi log - FAILED\n";
             $result = 0;
         }
         # unless ($exist2) {

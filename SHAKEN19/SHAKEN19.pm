@@ -145,7 +145,7 @@ our %db_line = (
                             },
 
                 );
-
+   
 our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
                 'tms1286676' => ['sip_1','gr303_2'],
                 'tms1286677' => ['sip_1','gr303_1'],
@@ -327,7 +327,6 @@ sub table_ofcvar_default{
         $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
         print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
         return 0;
-        goto CLEANUP;
     } else {
         print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
     }
@@ -345,7 +344,6 @@ sub table_ofcvar_default{
         $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
         print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
         return 0;
-        goto CLEANUP;
     } else {
         print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
     }
@@ -353,7 +351,6 @@ sub table_ofcvar_default{
         $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of STRSHKN_Verstat_Mapping ");
         print FH "STEP: Default Values of STRSHKN_Verstat_Mapping  - FAIL\n";
         return 0;
-        goto CLEANUP;
     } else {
         if (grep /REPLACED/, $ses_core->execCmd("Y")) {            
                 print FH "STEP: Default Values of STRSHKN_Verstat_Mapping - PASS\n";       
@@ -367,7 +364,6 @@ sub table_ofcvar_default{
         $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of STRSHKN_PASS_VERSTAT ");
         print FH "STEP: Default Values of STRSHKN_PASS_VERSTAT  - FAIL\n";
         return 0;
-        goto CLEANUP;
     } else {
         if (grep /REPLACED/, $ses_core->execCmd("Y")) {            
                 print FH "STEP: Default Values of STRSHKN_PASS_VERSTAT  - PASS\n";       
@@ -381,14 +377,12 @@ sub table_ofcvar_default{
         $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of STRSHKN_BUILD_PASS_VERSTAT ");
         print FH "STEP: Default Values of STRSHKN_BUILD_PASS_VERSTAT  - FAIL\n";
         return 0;
-        goto CLEANUP;
     } else {
         if (grep /REPLACED/, $ses_core->execCmd("Y")) {            
                 print FH "STEP: Default Values of STRSHKN_BUILD_PASS_VERSTAT  - PASS\n";       
         }else{
             print FH "STEP: Default Values of STRSHKN_BUILD_PASS_VERSTAT  - FAIL\n";
                 return 0;
-                goto CLEANUP;
         }  
     }
 }
@@ -467,8 +461,8 @@ our @TESTCASES = (
                     # "tms1286689",	#FAILwithjira Verifying verstat parameter to be sent properly from PRI to SIP Line
                     # "tms1286690",	#VFAILwithjira erifying verstat parameter to be sent properly from PRI to SIP_PBX
                     # "tms1286691",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
-                    "tms1286692",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
-                    "tms1286693",	#Verify he attestation value shall be used to build and pass a Verstat value to the terminating SIP endpoint Where line, PRI and SIP PBX originations (ie. line_PRI_SIP PBX to line scenarios) determine an attestation data in C20
+                    # "tms1286692",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
+                    # "tms1286693",	#Verify he attestation value shall be used to build and pass a Verstat value to the terminating SIP endpoint Where line, PRI and SIP PBX originations (ie. line_PRI_SIP PBX to line scenarios) determine an attestation data in C20
                     # "tms1286694",	#Verify Verstat results shall be configurable based on the attestation level. TN-Validation-Passed can be defined as A only.
                     # "tms1286695",	#Verify Verstat results shall be configurable based on the attestation level. TN-Validation-Passed can be defined as A & B only
                     # "tms1286696",	#Verify Verstat results shall be configurable based on the attestation level. TN-Validation-Passed can be defined as A, B and C.
@@ -476,27 +470,26 @@ our @TESTCASES = (
                     # "tms1286698",	#Verify Verstat results shall be configurable based on the attestation level.   TN-Validation-Failed can be defined as C only.
                     # "tms1286699",	#Verify Verstat results shall be configurable based on the attestation level.   No-TN-Validation shall be applied where no attestation data is received.
                     # "tms1286700",	#After core and gwc mtc actions, checking the feature is still working.
-                    # "tms1286701",	#While SOC is IDLE, checking the feature is not working
-                    "tms1286702",	#While STRSHKN_Pass_Verstat is N, make sure the feature is NOT working for non-local calls
-                    "tms1286703",	#While STRSHKN_Build_Pass_Verstat is N , make sure the feature is NOT working for local calls
-                    "tms1286704",	#OM_Verify Display oms : STRSHKN1 is support 
+                    # # "tms1286701",	#While SOC is IDLE, checking the feature is not working
+                    # "tms1286702",	#While STRSHKN_Pass_Verstat is N, make sure the feature is NOT working for non-local calls
+                    # "tms1286703",	#While STRSHKN_Build_Pass_Verstat is N , make sure the feature is NOT working for local calls
+                    # "tms1286704",	#OM_Verify Display oms : STRSHKN1 is support 
                     # "tms1286705",	#OM_Verify Display oms : STRSHKN2 is support 
-                    "tms1286706",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
-                    "tms1286707",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
-                    "tms1286708",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
-                    "tms1286709",	#OM_Verify New OM STRSHKN value VERSTATA
-                    "tms1286710",	#OM_Verify New OM STRSHKN values : VERSTATB
-                    "tms1286711",	#OM_Verify New OM STRSHKN value VERSTATC
-                    "tms1286712",	#OM_Verify New OM STRSHKN value VPASSED
-                    "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
-                    "tms1303242",	#After restart cold, checking the OFCVAR Options
-                    "tms1303243",	#After restart reload, checking the OFCVAR Options
-                    # "tms1303244",	#Error path_set STRSHKN_ENABLED Y Y when The Stir Shaken SOC CS2B0009 is NOT Enabled
-                    # "tms1303245",	#Error path_set STRSHKN_ENABLED Y N when The Stir Shaken SOC CS2B0009 is NOT Enabled
-                    # "tms1303246",	#Error path_set STRSHKN_ENABLED N Y when The Stir Shaken SOC CS2B0009 is NOT Enabled            
-                    # "tms1303247",	#Error path_Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping FAIL  FAIL FAIL
-
-                   
+                    # "tms1286706",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
+                    # "tms1286707",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
+                    # "tms1286708",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
+                    # "tms1286709",	#OM_Verify New OM STRSHKN value VERSTATA
+                    # "tms1286710",	#OM_Verify New OM STRSHKN values : VERSTATB
+                    # "tms1286711",	#OM_Verify New OM STRSHKN value VERSTATC
+                    # "tms1286712",	#OM_Verify New OM STRSHKN value VPASSED
+                    # "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
+                    # "tms1303242",	#After restart cold, checking the OFCVAR Options
+                    # "tms1303243",	#After restart reload, checking the OFCVAR Options
+                    #  "tms1303244",	#Error path_set STRSHKN_ENABLED Y Y when The Stir Shaken SOC CS2B0009 is NOT Enabled
+                    #  "tms1303245",	#Error path_set STRSHKN_ENABLED Y N when The Stir Shaken SOC CS2B0009 is NOT Enabled
+                    #  "tms1303246",	#Error path_set STRSHKN_ENABLED N Y when The Stir Shaken SOC CS2B0009 is NOT Enabled            
+                    #  "tms1303247",	#Error path_Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping FAIL  FAIL FAIL
+             
                 );
 
 ############################### Run Test #####################################
@@ -803,7 +796,7 @@ sub tms1286666 { #Provisioning_Enable Disable SOC CS2C0009
     @TRKOPTS = $ses_core->execCmd("table TRKOPTS; format pack;list all;"); 
     
     foreach (@TRKOPTS){
-		if ($_ =~ /(\w+.*STRSHKN STRSHKN)/) {
+		if ( /(\w+.*STRSHKN STRSHKN)/) {
             $logger->debug(__PACKAGE__ . ": STRSHKN exists in TRKOPTS ");
             $ses_core->{conn}->prompt('/.*[%\}\|\>\]].*$/'); # prevPrompt is /.*[\$%#\}\|\>\]].*$/
 			$ses_core->execCmd("del $1 ");
@@ -816,7 +809,7 @@ sub tms1286666 { #Provisioning_Enable Disable SOC CS2C0009
     $ses_core->{conn}->prompt('/BOTTOM/');
     @TRKOPTS = $ses_core->execCmd("table LTDATA; format pack;list all;"); 
     foreach (@TRKOPTS){
-		if ($_ =~ /(\w+.*\s)\((STRSHKN)/) {
+		if (/(\w+.*\s)\((STRSHKN)/) {
             $logger->debug(__PACKAGE__ . ": STRSHKN exists in LTDATA");
             $ses_core->{conn}->prompt('/.*[%\}\|\>\]].*$/'); # prevPrompt is /.*[\$%#\}\|\>\]].*$/
             $ses_core->execCmd("pos $1 $2 ");
@@ -1661,7 +1654,7 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -1722,6 +1715,8 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
         goto CLEANUP;
     }
     $ses_core->execCmd("sosAgent vca show VCA");
+    
+    $logger->debug(__PACKAGE__ . " $tcid: Sleep 800s wait core active" );
     sleep (800);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
@@ -1805,7 +1800,7 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -2083,7 +2078,7 @@ sub tms1286677 { #GWC warm swact during signaling association ,callp no dropped 
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -2120,11 +2115,17 @@ sub tms1286677 { #GWC warm swact during signaling association ,callp no dropped 
 	# Determine unit active on GWC-15
 	my $unit_active;
 	foreach (@state_unit){
-		if ($_ =~ /\s+(\d+)\s+SI_1\s+active/){
+		if ( /\s+(\d+)\s+SI_1\s+active/){
 			$unit_active = $1;
 			print FH "The unit active on GWC-$gwc_id is: $unit_active\n";
 		} 
 	}
+    unless ($unit_active) {
+        print FH "Can't get unit active \n";
+        $result = 0;
+        goto CLEANUP;
+    }
+
 	sleep(1);
 	# Execue swact gwc for unit active  
 	unless (grep /confirm/,$ses_core -> execCmd("aim service-unit swact gwc$gwc_id $unit_active f")){
@@ -2215,7 +2216,7 @@ sub tms1286677 { #GWC warm swact during signaling association ,callp no dropped 
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -2494,7 +2495,7 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -2532,11 +2533,16 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
 	# Determine unit active on SST-15
 	my $unit_active;
 	foreach (@state_unit){
-		if ($_ =~ /\s+(\d+)\s+SI_1\s+active/){
+		if ( /\s+(\d+)\s+SI_1\s+active/){
 			$unit_active = $1;
 			print FH "The unit active on GWC-$gwc_id is: $unit_active\n";
 		} 
 	}
+    unless ($unit_active) {
+        print FH "Can't get unit active \n";
+        $result = 0;
+        goto CLEANUP;
+    }
 	sleep(1);
 	# Execue swact SST for unit active  
 	$ses_core -> execCmd("aim service-unit swact sst000 $unit_active f");
@@ -2619,7 +2625,7 @@ sub tms1286678 { #SST warm swact during signaling association, callp no dropped 
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -2907,7 +2913,7 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -3001,20 +3007,26 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
     } else {
         print FH "STEP: Login TMA20 core - PASS\n";
     }  
-# Check speech path between A and B
-    %input = (
-                -list_port => [$list_line[0],$list_line[1]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        print FH "STEP: check no speech path between A and B - PASS\n";
-    } else {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at checking no speech path between A and B ");
-        print FH "STEP: check no speech path between A and B - FAIL\n";
+# detectNoTestToneCAS
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
+        my flag = 0;
+    }
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
+        my flag = 0;
+    }
+    unless ($flag){
+        print FH "STEP: Speech path is down after restart cold Core  - FAIL\n";
         $result = 0;
-        goto CLEANUP;
+    }else{
+        print FH "STEP: Speech path is down after restart cold Core - PASS\n";
     }
 # Check line status of A and B
     unless (grep /IDL/, $ses_core->execCmd("mapci nodisp;mtc;lns;ltp;post d $list_dn[0] print")){
@@ -3074,7 +3086,7 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -3352,7 +3364,7 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -3420,20 +3432,26 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
 	}
 	
 	sleep(3);
-# Check speech path between A and B
-    %input = (
-                -list_port => [$list_line[0],$list_line[1]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->debug(__PACKAGE__ . " $tcid: checking no speech path between A and B ");
-        print FH "STEP: check speech path between A and B - PASS\n";
-    } else {
-        print FH "STEP: check speech path between A and B - FAIL\n";
+# detectNoTestToneCAS
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
+        my flag = 0;
+    }
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
+        my flag = 0;
+    }
+    unless ($flag){
+        print FH "STEP: Speech path is down after cold swact GWC - FAIL\n";
         $result = 0;
-        goto CLEANUP;
+    }else{
+        print FH "STEP: Speech path is down after cold swact GWC - PASS\n";
     }
 # Hang up line A,B
     foreach ($list_line[0], $list_line[1]){
@@ -3476,7 +3494,7 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -3763,7 +3781,7 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -3830,35 +3848,26 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
 	}
 	
 	sleep(3);
-# Check speech path between A and B
-    %input = (
-                -list_port => [$list_line[0],$list_line[1]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->debug(__PACKAGE__ . " $tcid: checking no speech path between A and B ");
-        print FH "STEP: check speech path between A and B - PASS\n";
-    } else {
-        print FH "STEP: check speech path between A and B - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
+# detectNoTestToneCAS
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
     }
-# Check speech path between A and B
-    %input = (
-                -list_port => [$list_line[0],$list_line[1]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and B ");
-        print FH "STEP: check speech path between A and B - FAIL\n";
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
+        my flag = 0;
+    }
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
+        my flag = 0;
+    }
+    unless ($flag){
+        print FH "STEP: Speech path is down after cold swact SST  - FAIL\n";
         $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: check speech path between A and B - PASS\n";
+    }else{
+        print FH "STEP: Speech path is down after cold swact SST  - PASS\n";
     }
 # Hang up line A,B
     foreach ($list_line[0], $list_line[1]){
@@ -3901,7 +3910,7 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -4247,15 +4256,15 @@ sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling associati
     }
     my $i = 0;
     foreach(@cmd_result){
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]K//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]8//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]7//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]0m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
+         s/[^a-zA-Z0-9, _, :]K//g;
+         s/[^a-zA-Z0-9, _, :]8//g;
+         s/[^a-zA-Z0-9, _, :]7//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
+         s/[^a-zA-Z0-9, _, :]0m//g;
+         s/[^a-zA-Z0-9, _, :]//g;
         $logger->debug(__PACKAGE__ . ".$tcid: ############################$_");
-        if($_ =~ /(SSTSHAKEN\s+\w+)/){
+        if( /(SSTSHAKEN\s+\w+)/){
             $status = $1;
             $logger->error(__PACKAGE__ . " $tcid: #############################Status: $status");
             print FH "STEP: Verify SST state on the mapci => Output: $status - PASS\n";
@@ -4270,33 +4279,40 @@ sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling associati
     } else {
         print FH "STEP: Verify SST is busy successfully - PASS\n";
     }
-    # Check speech path between A and B
-    %input = (
-                -list_port => [$list_line[0],$list_line[1]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and B ");
-        print FH "STEP: check speech path between A and B - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: check speech path between A and B - PASS\n";
+# detectNoTestToneCAS
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
     }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
+        my flag = 0;
+    }
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
+        my flag = 0;
+    }
+    unless ($flag){
+        print FH "STEP: Speech path is down after Bsy SST - FAIL\n";
+        $result = 0;
+    }else{
+        print FH "STEP: Speech path is down after Bsy SST - PASS\n";
+    }
+
     $ses_core->execCmd("mapci nodisp;mtc;trks;DPTRKS;post g SSTSHAKEN");
     $ses_core->execCmd("rts");
     $ses_core->execCmd("quit all");
     @cmd_result= $ses_core->execCmd("mapci;mtc;trks;DPTRKS;post g SSTSHAKEN");
     foreach(@cmd_result){
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]K//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]8//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]7//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]0m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
+         s/[^a-zA-Z0-9, _, :]K//g;
+         s/[^a-zA-Z0-9, _, :]8//g;
+         s/[^a-zA-Z0-9, _, :]7//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
+         s/[^a-zA-Z0-9, _, :]0m//g;
+         s/[^a-zA-Z0-9, _, :]//g;
         $logger->debug(__PACKAGE__ . ".$tcid: ############################$_"); 
     }
     unless (grep /SSTSHAKEN\s+INS/, @cmd_result) {
@@ -4648,15 +4664,15 @@ sub tms1286683 { #BSY_RTS_FRLS the originator or DPT trunk during signaling asso
     }
     my $i = 0;
     foreach(@cmd_result){
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]K//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]8//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]7//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]0m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
+         s/[^a-zA-Z0-9, _, :]K//g;
+         s/[^a-zA-Z0-9, _, :]8//g;
+         s/[^a-zA-Z0-9, _, :]7//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
+         s/[^a-zA-Z0-9, _, :]0m//g;
+         s/[^a-zA-Z0-9, _, :]//g;
         $logger->debug(__PACKAGE__ . ".$tcid: ############################$_");
-        if($_ =~ /(SSTSHAKEN\s+\w+)/){
+        if( /(SSTSHAKEN\s+\w+)/){
             $status = $1;
             $logger->error(__PACKAGE__ . " $tcid: #############################Status: $status");
             print FH "STEP: Verify SST state on the mapci => Output: $status - PASS\n";
@@ -4697,32 +4713,38 @@ sub tms1286683 { #BSY_RTS_FRLS the originator or DPT trunk during signaling asso
         $ses_core->execCmd("y");
         print FH "STEP: frls all - PASS\n";
     }
-    # Check speech path between A and B
-    %input = (
-                -list_port => [$list_line[0],$list_line[1]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        print FH "STEP: check no speech path between A and B - PASS\n";
-    } else {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at checking no speech path between A and B ");
-        print FH "STEP: check no speech path between A and B - FAIL\n";
+# detectNoTestToneCAS
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
+        my flag = 0;
+    }
+    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
+    }
+    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
+        my flag = 0;
+    }
+    unless ($flag){
+        print FH "STEP: Speech path is down after locking $gwc - FAIL\n";
         $result = 0;
-        goto CLEANUP;
+    }else{
+        print FH "STEP: Speech path is down after locking $gwc - PASS\n";
     }
     $ses_core->execCmd("rts");
     $ses_core->execCmd("quit all");
     @cmd_result= $ses_core->execCmd("mapci;mtc;trks;DPTRKS;post g SSTSHAKEN");
     foreach(@cmd_result){
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]K//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]8//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]7//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]0m//g;
-        $_ =~ s/[^a-zA-Z0-9, _, :]//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+H[^a-zA-Z0-9,]//g;
+         s/[^a-zA-Z0-9, _, :]K//g;
+         s/[^a-zA-Z0-9, _, :]8//g;
+         s/[^a-zA-Z0-9, _, :]7//g;
+         s/[^a-zA-Z0-9, _, :]\d+;\d+m//g;
+         s/[^a-zA-Z0-9, _, :]0m//g;
+         s/[^a-zA-Z0-9, _, :]//g;
         $logger->debug(__PACKAGE__ . ".$tcid: ############################$_"); 
     }
     unless (grep /SSTSHAKEN\s+INS/, @cmd_result) {
@@ -5784,7 +5806,7 @@ sub tms1286687 { #Verifying verstat parameter to be sent properly from Local Lin
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -6038,7 +6060,7 @@ sub tms1286688 { #Verifying verstat parameter to be sent properly from Local Lin
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -9017,7 +9039,7 @@ sub tms1286700 { #After core and gwc mtc actions, checking the feature is still 
                 -ring_on => [0],
                 -ring_off => [0],
                 -on_off_hook => ['offB'],
-                -send_receive => ['NONE'],
+                -send_receive => ['TESTTONE 1000'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -10366,7 +10388,7 @@ sub tms1286706 { #Checking StrShkn Verstat OMs to be pegged properly for non-loc
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $ATTESTB = $1;
@@ -10403,7 +10425,7 @@ sub tms1286706 { #Checking StrShkn Verstat OMs to be pegged properly for non-loc
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $ATTESTB1 = $1;
@@ -10686,7 +10708,7 @@ sub tms1286707 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $ATTESTA = $1;
@@ -10723,7 +10745,7 @@ sub tms1286707 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $ATTESTA1 = $1;
@@ -11006,7 +11028,7 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $ATTESTA = $1;
@@ -11043,7 +11065,7 @@ sub tms1286708 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $ATTESTA1 = $1;
@@ -11326,7 +11348,7 @@ sub tms1286709 { #OM_Verify New OM STRSHKN values : VERSTATA
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $ATTESTA = $1;
@@ -11363,7 +11385,7 @@ sub tms1286709 { #OM_Verify New OM STRSHKN values : VERSTATA
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /(\d+)\s+\d+\s+/) {
+        if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $ATTESTA1 = $1;
@@ -11646,7 +11668,7 @@ sub tms1286710 { #OM_Verify New OM STRSHKN values : VERSTATB
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /\d+\s+(\d+)\s+/) {
+        if ( /\d+\s+(\d+)\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $ATTESTB = $1;
@@ -11683,7 +11705,7 @@ sub tms1286710 { #OM_Verify New OM STRSHKN values : VERSTATB
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /\d+\s+(\d+)\s+/) {
+        if ( /\d+\s+(\d+)\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $ATTESTB1 = $1;
@@ -11966,7 +11988,7 @@ sub tms1286711 { #OM_Verify New OM STRSHKN values : VERSTATC
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /\d+\s+\d+\s+(\d+)/) {
+        if ( /\d+\s+\d+\s+(\d+)/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $ATTESTC = $1;
@@ -12003,7 +12025,7 @@ sub tms1286711 { #OM_Verify New OM STRSHKN values : VERSTATC
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /\d+\s+\d+\s+(\d+)/) {
+        if ( /\d+\s+\d+\s+(\d+)/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $ATTESTC1 = $1;
@@ -12248,7 +12270,7 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /\d+\s+\d+\s+\d+\s+(\d+)/) {
+        if ( /\d+\s+\d+\s+\d+\s+(\d+)/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
             $VPASSED = $1;
@@ -12276,7 +12298,7 @@ sub tms1286712 { #OM_Verify New OM STRSHKN values : VPASSED
 #omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
     for(@output){
-        if ($_ =~ /\d+\s+\d+\s+\d+\s+(\d+)/) {
+        if ( /\d+\s+\d+\s+\d+\s+(\d+)/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
             $VPASSED1 = $1;
