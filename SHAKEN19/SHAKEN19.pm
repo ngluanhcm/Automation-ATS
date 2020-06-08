@@ -3013,14 +3013,14 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($flag){
         print FH "STEP: Speech path is down after restart cold Core  - FAIL\n";
@@ -3438,14 +3438,14 @@ sub tms1286680 { #GWC cold swact during signaling association , callp dropped, c
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($flag){
         print FH "STEP: Speech path is down after cold swact GWC - FAIL\n";
@@ -3854,14 +3854,14 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($flag){
         print FH "STEP: Speech path is down after cold swact SST  - FAIL\n";
@@ -4285,14 +4285,14 @@ sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling associati
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($flag){
         print FH "STEP: Speech path is down after Bsy SST - FAIL\n";
@@ -4719,20 +4719,20 @@ sub tms1286683 { #BSY_RTS_FRLS the originator or DPT trunk during signaling asso
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
     }
     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
-        my flag = 0;
+        $flag = 0;
     }
     unless ($flag){
-        print FH "STEP: Speech path is down after locking $gwc - FAIL\n";
+        print FH "STEP: Speech path is down after locking frls SST - FAIL\n";
         $result = 0;
     }else{
-        print FH "STEP: Speech path is down after locking $gwc - PASS\n";
+        print FH "STEP: Speech path is down after locking frls SST- PASS\n";
     }
     $ses_core->execCmd("rts");
     $ses_core->execCmd("quit all");
