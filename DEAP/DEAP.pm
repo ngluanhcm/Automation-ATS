@@ -221,7 +221,7 @@ our @TESTCASES = (
                     # "tms1243150",	#ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Service SDN
                     # "tms1243135",	#AKF-40036 - Verify the test call from TD trunk ATC to the line with RSUS OPRT option
                     # "tms1243136",	#AKF-40309 - Provision TTU Circuit as IBERT Tester in table FMRESINV
-                    # "tms1309895",	#AKF-40665- Verify the Core Rex Test and GWC Rex Test can not run at the same time
+                    "tms1309895",	#AKF-40665- Verify the Core Rex Test and GWC Rex Test can not run at the same time
                     # "tms1309896",	#AKF-40375 Verify AMA Billing Module Code 130 Facility Release field has correct values
                     # "tms1309897",	#AKF-40363 - Verify calling party number is displayed on phone via PRI trunk
                    
@@ -806,8 +806,8 @@ sub tms1309895 { #AKF-40665- Verify the Core Rex Test and GWC Rex Test can not r
     my ($ses_core1);
     my $ofrt_config = 0;
 ################################# LOGIN #######################################
-    unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:2:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:2:ce0'}" );
+    unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 - FAIL\n";
         $result = 0;
         goto CLEANUP;
@@ -822,13 +822,21 @@ sub tms1309895 { #AKF-40665- Verify the Core Rex Test and GWC Rex Test can not r
     } else {
         print FH "STEP: Login TMA15 core - PASS\n";
     }
-    unless ($ses_core1 = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:2:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:2:ce0'}" );
+    unless ($ses_core1 = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
         print FH "STEP: Login TMA15 - FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
+    }
+    unless ($ses_core1->loginCore(-username => [@{$core_account{-username}}[3..5]], -password => [@{$core_account{-password}}[3..5]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core - PASS\n";
     }
 ############### Test Specific configuration & Test Tool Script Execution #################
 # check Table Rexsched
@@ -858,10 +866,11 @@ sub tms1309895 { #AKF-40665- Verify the Core Rex Test and GWC Rex Test can not r
     }
 
 ###################### Call flow ###########################
+# SREXDBG in core
+    $ses_core1->execCmd("quit all");
+    $ses_core1->execCmd("SREXDBG");
+
 # Rex Test GWC
-    $ses_core1->execCmd("cli");
-    sleep(5);
-    $ses_core1->execCmd("sosAgent vca rex VCA",5);
     #pos GWC in Mapci
     $ses_core->{conn}->prompt('/\>/');
     my @cmd_result;
@@ -894,17 +903,32 @@ sub tms1309895 { #AKF-40665- Verify the Core Rex Test and GWC Rex Test can not r
     sleep(2);
     # $ses_core->{conn}->print("y\n");
 # Rex core
-
-    $ses_core1->{conn}->prompt('/cli/'); 
-    unless (grep /Rejected/, $ses_core1->execCmd("y",1000)) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot exec cmd sosAgent vca rex VCA");
-        print FH "STEP: Core Rex Test and GWC Rex Test can not run at the same time - FAIL\n";
+    my @output;
+    #prompt
+    $ses_core1->{conn}->prompt('/\>/');
+    unless (grep /CA_REX_TEST/, @output = $ses_core1->execCmd("LISTOBJ")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot execCmd LISTOBJ");
+        print FH "STEP: execCmd LISTOBJ - FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
-        print FH "STEP: Core Rex Test and GWC Rex Test can not run at the same time - PASS\n";
+        print FH "STEP: execCmd LISTOBJ - PASS\n";
     }
-
+    my $MANREQ ;
+    foreach (@output) {
+        if (/(\d+)\s+CA_REX_TEST.*\{(.*)\}/) {
+        $MANREQ = $1." N ".$2;
+        last;
+        }
+    }
+    unless (grep /Rex test conflicts with one running/, $ses_core1->execCmd("MANREQ $MANREQ")) {
+        $logger->error(__PACKAGE__ . " $tcid: Rex test conflicts with one running - FAIL ");
+        print FH "STEP: Rex test conflicts with one running - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Rex test conflicts with one running - PASS\n";
+    }
 ################################## Cleanup tms1309895 ##################################
     CLEANUP:
     $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1309895 ##################################");
