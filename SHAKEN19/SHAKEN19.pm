@@ -6215,7 +6215,7 @@ sub tms1286689 { #Verifying verstat parameter to be sent properly from PRI to SI
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 # config table LTDATA
     unless (grep /TABLE:.*LTDATA/, $ses_core->execCmd("table LTDATA")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table LTDATA' ");
@@ -6516,7 +6516,7 @@ sub tms1286690 { #Verifying verstat parameter to be sent properly from PRI to SI
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 # config table LTDATA
     unless (grep /TABLE:.*LTDATA/, $ses_core->execCmd("table LTDATA")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table LTDATA' ");
@@ -6789,7 +6789,7 @@ sub tms1286691 { #Verifying verstat parameter to be sent properly from SIP-PBX t
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 
 # Check Trunk status
     my $idl_num;
@@ -6997,7 +6997,7 @@ sub tms1286692 { #Verifying verstat parameter to be sent properly from SIP_PBX t
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 
 # Start logutil
     %input = (
@@ -7198,7 +7198,7 @@ sub tms1286693 { #Verify the attestation value shall be used to build and pass a
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
         %input = (

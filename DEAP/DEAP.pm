@@ -141,7 +141,8 @@ our %tc_line = (
                 'tms1309896' => ['gpp_1','gpp_2'],
                 'tms1309897' => ['gr303_1','gr303_2','gr303_3','gr303_4'],
 );
-
+# Info for OSSGATE
+our @ossgate = ('cmtg', 'cmtg');
 #################### Trunk info ###########################
 our %db_trunk = (
                 't15_isup_atc' =>{
@@ -330,17 +331,20 @@ sub tms1243150 { #ABH-1783 - Verify qdnwrk command for MGCP lines have Teen Serv
     $add_feature_lineA = 1;
 
 ###################### Call flow ###########################
-#telnet cmtg 10023
-	$ses_core1->{conn}->print("telnet cmtg 10023\n");
-    sleep(5);
-    $ses_core1->execCmd("cmtg tma15\@11\n");
-	unless ($ses_core1->{conn}->waitfor(-match => '/logged in/')){
-		$logger->error(__PACKAGE__ . ": The input password is incorect, fail to login ossgate ");
-		print FH "STEP: Login into ossgate  fail - FAIL\n";
-		return 0;
-	} else {
-		$logger->debug(__PACKAGE__ . ": Successfully login into to ossgate");
-		print FH "STEP: Login into ossgate  pass - PASS\n";
+# Telnet to OSSGATE
+	$ses_core1 ->{conn}->prompt('/>/');
+	if (grep /Enter username and password/, $ses_core1->execCmd("telnet cmtg 10023")){
+		$logger->debug(__PACKAGE__ . " $tcid: Login to ossgate");
+		$ses_core1 ->{conn}->prompt('/>/');
+		if (grep /logged in/, $ses_core1->execCmd("$ossgate[0] $ossgate[1]")){
+			$logger->debug(__PACKAGE__ . " $tcid: Login to ossgate with account $ossgate[0] $ossgate[1]");
+			print FH "STEP: Login to OSSGATE - PASSED\n";
+		} else {
+			$logger->error(__PACKAGE__ . " $tcid: Can't login to ossgate");
+			print FH "STEP: Login to OSSGATE - FAILED\n";
+			$result = 0;
+			goto CLEANUP;
+		}
 	}
 #prompt
     $ses_core1->{conn}->prompt('/TOTAL COUNT OF WORKING DN/'); # prevPrompt is /.*[\$%#\}\|\>\]].*$/
@@ -876,11 +880,11 @@ sub tms1309895 { #AKF-40665- Verify the Core Rex Test and GWC Rex Test can not r
     my @cmd_result;
     my $status;
     if (grep /Undefined command|error/, @cmd_result= $ses_core->execCmd("mapci;mtc;pm;post GWC 4")) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed to execution cmd 'post'");
-        print FH "STEP: Execution cmd 'post' - FAIL\n";
+        $logger->error(__PACKAGE__ . " $tcid: Failed to execution cmd 'post GWC 4'");
+        print FH "STEP: Execution cmd 'post  GWC 4' - FAIL\n";
         $result = 0;
     } else {
-        print FH "STEP: Execution cmd 'post' - PASS\n";
+        print FH "STEP: Execution cmd 'post GWC 4' - PASS\n";
     }
     my $i = 0;
     foreach(@cmd_result){

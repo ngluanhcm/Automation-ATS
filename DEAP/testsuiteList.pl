@@ -14,12 +14,10 @@ use QATEST::C20_EO::Luan::Automation_ATS::DEAP::DEAP;
 
 our $TESTSUITE;
 
-# $TESTSUITE->{TESTED_RELEASE} = "GBV.C20_R21";
-# $TESTSUITE->{BUILD_VERSION} = "C20-CORE_xsnn17cf";
-# $TESTSUITE->{TESTED_VARIANT} = "GBV.C20_R21";
+$TESTSUITE->{TESTED_RELEASE} = "GBV.R20_BRC";
+$TESTSUITE->{BUILD_VERSION} = "C20-CORE_vsnw17ch";
+$TESTSUITE->{TESTED_VARIANT} = "ADQ_1183";
 
-$TESTSUITE->{TESTED_RELEASE} = "V04.02.03";
-$TESTSUITE->{BUILD_VERSION} = "A624";
 $TESTSUITE->{PATH} = '/home/ylethingoc/ats_user/logs/DEAP'.$TESTSUITE->{TESTED_RELEASE};   # CGE Log Path to Store Server logs and Core Files. 
 
 # NOTE: Email ID of test suite executer is added by default.

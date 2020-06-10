@@ -147,15 +147,6 @@ our %db_line = (
                 );
    
 our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
-                'tms1286676' => ['sip_1','gr303_2'],
-                'tms1286677' => ['sip_1','gr303_1'],
-                'tms1286678' => ['sip_1','gr303_1'],
-                'tms1286679' => ['sip_1','gr303_1'],
-                'tms1286680' => ['sip_1','gr303_1'],
-                'tms1286681' => ['sip_1','gr303_1'],
-                'tms1286682' => ['sip_1','gr303_1'],
-                'tms1286683' => ['gr303_1','gr303_2'],
-                'tms1286684' => ['sip_2','sip_1'],
                 'tms1287010' => ['sip_2','sip_1'],
                 'tms1287011' => ['sip_2','sip_1'],
                 'tms1287012' => ['gr303_1','sip_1'],
@@ -164,27 +155,13 @@ our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
                 'tms1287015' => ['gr303_1','Sip_pbx'],
                 'tms1287016' => ['sip_2','sip_1'],
                 'tms1287017' => ['sip_2','sip_1'],
-                'tms1286693' => ['gr303_1','sip_1'],
-                'tms1286694' => ['sip_2','gr303_1'],
-                'tms1286695' => ['sip_2','sip_1'],
-                'tms1286696' => ['sip_2','sip_1'],
-                'tms1286697' => ['sip_2','sip_1'],
-                'tms1286698' => ['sip_2','sip_1'],
-                'tms1286699' => ['sip_2','sip_1'],
-                'tms1286700' => ['gr303_1','sip_1'],
-                'tms1286701' => ['gr303_1','sip_1'],
-                'tms1286702' => ['gr303_1','sip_1'],
-                'tms1286703' => ['gr303_1','sip_1'],
+                'tms1287018' => ['gr303_1','gr303_2','sip_1'],
+                'tms1287020' => ['gr303_1','gr303_2','sip_1'],
                 'tms1287033' => ['gr303_1','sip_1'],
                 'tms1287034' => ['gr303_1','sip_1'],
                 'tms1287035' => ['gr303_1','sip_1'],
                 'tms1287036' => ['gr303_1','sip_1'],
                 'tms1287037' => ['gr303_1','sip_1'],
-                'tms1286709' => ['gr303_1','sip_1'],
-                'tms1286710' => ['gr303_1','sip_1'],
-                'tms1286711' => ['gr303_1','sip_1'],
-                'tms1286712' => ['sip_2','gr303_1'],
-                'tms1286713' => ['sip_2','gr303_1'],
 );
 
 #################### Trunk info ###########################
@@ -448,7 +425,7 @@ our @TESTCASES = (
                     # "tms1287019",	#Callp service - CFU forward to SIP line via SST trunk with BRI line as originator
                     # "tms1287020",	#Callp service - CXR tranfer to SIP line via SST trunk
                     # "tms1287021",	#Callp service - CFB forward to SIP line via SST trunk
-                    # "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
+                    "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
                     # "tms1287023",	#Callp service - SCL call to SIP line via SST trunk
                     # "tms1287024",	#Callp service - SCS call to SIP line via SST trunk
                     # "tms1287025",	#Callp service - CHD hold a call and make a new call to SIP line via SST trunk
@@ -721,6 +698,113 @@ sub TC0 {
     }else{
         print FH "STEP: translation line to SST - PASS\n"; 
     }
+# del config table TRKOPTS
+    $ses_core->{conn}->prompt('/BOTTOM/');
+    my @TRKOPTS = $ses_core->execCmd("table TRKOPTS; format pack;list all;"); 
+    
+    foreach (@TRKOPTS){
+		if ( /(\w+.*STRSHKN STRSHKN)/) {
+            $logger->debug(__PACKAGE__ . ": STRSHKN exists in TRKOPTS ");
+            $ses_core->{conn}->prompt('/.*[%\}\|\>\]].*$/'); # prevPrompt is /.*[\$%#\}\|\>\]].*$/
+			$ses_core->execCmd("del $1 ");
+            $ses_core->execCmd("y");
+            print FH "STEP: del $1 - Pass\n";
+        }
+    }		
+    my $TRKOPTS_config = 1;
+# delconfig table LTDATA
+    $ses_core->{conn}->prompt('/BOTTOM/');
+    @TRKOPTS = $ses_core->execCmd("table LTDATA; format pack;list all;"); 
+    foreach (@TRKOPTS){
+		if (/(\w+.*\s)\((STRSHKN)/) {
+            $logger->debug(__PACKAGE__ . ": STRSHKN exists in LTDATA");
+            $ses_core->{conn}->prompt('/.*[%\}\|\>\]].*$/'); # prevPrompt is /.*[\$%#\}\|\>\]].*$/
+            $ses_core->execCmd("pos $1 $2 ");
+			$ses_core->execCmd("del");
+            $ses_core->execCmd("y");
+            print FH "STEP: del $1 - Pass\n";
+        }
+    }		
+    my $LTDATA_config = 1;
+    $ses_core->{conn}->prompt('/.*[%\}\|\>\]].*$/'); # prevPrompt is /.*[\$%#\}\|\>\]].*$/
+    unless (grep /CI/, $ses_core->execCmd("quit all")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'quit all' ");
+        }
+# Disable SOC
+    my @temp;
+    if (grep /exceeded/, $ses_core->execCmd("SOC")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'SOC' ");
+            print FH "STEP: execute command 'SOC' - FAIL\n";
+            $result = 0;
+            goto CLEANUP;
+    }
+    if (grep /Shaken.*ON/,@temp = $ses_core->execCmd("select option CS2C0009")) {
+        $logger->error(__PACKAGE__ . " $tcid: option CS2C0009  is Ensable ");
+        if (grep /entering/, $ses_core->execCmd("assign STATE IDLE to CS2C0009")) {
+            if (grep /disabled/, $ses_core->execCmd("Stir\/Shaken")) {
+                print FH "STEP: Disable option CS2C0009 - PASS \n";
+            }
+        }             
+    }else{
+        print FH "STEP: Disable option CS2C0009 - PASS \n";
+    }
+
+# Enable SOC
+    if (grep /Shaken.*IDLE/,@temp = $ses_core->execCmd("select option CS2C0009")) {
+        $logger->error(__PACKAGE__ . " $tcid: option CS2C0009  is Disable ");
+        if (grep /Done/, $ses_core->execCmd("assign rtu JFCM9397UKE4YRCGBWGZ to CS2C0009")) {            
+                print FH "STEP: Enable rtu  CS2C0009 - PASS \n";         
+        }else{
+            print FH "STEP: Enable rtu  CS2C0009 - Failed \n";
+            $result = 0;
+            goto CLEANUP;
+        }
+        if (grep /enabled/, $ses_core->execCmd("assign STATE ON to CS2C0009")) {            
+                print FH "STEP: Enable option CS2C0009 - PASS \n";         
+        }             
+    }else{
+        print FH "STEP: Enable option CS2C0009 - PASS \n";
+    }
+# config table OKPARMS
+    unless (grep /TABLE:.*OKPARMS/, $ses_core->execCmd("table OKPARMS")) {
+         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table OKPARMS' ");
+    }
+    unless (grep /STRSHKN_ENABLED/, $ses_core->execCmd("pos STRSHKN_ENABLED")) {
+         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos STRSHKN_ENABLED' ");
+    }else{
+         print FH "STEP: check STRSHKN_ENABLED in table OKPARMS - Pass\n";
+    }
+    unless (grep /STRSHKN_ORIGID/, $ses_core->execCmd("pos STRSHKN_ORIGID")) {
+         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos STRSHKN_ORIGID' ");
+    }else{
+         print FH "STEP: check STRSHKN_ORIGID in table OKPARMS - Pass\n";
+    }
+# config table TRKOPTS
+    if ($TRKOPTS_config) {
+        unless (grep /TABLE:.*TRKOPTS/, $ses_core->execCmd("table TRKOPTS")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table TRKOPTS' ");
+        }
+        if (grep /ERROR/, $ses_core->execCmd("add SSTSHAKEN STRSHKN STRSHKN")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'add SSTSHAKEN STRSHKN STRSHKN' ");
+            print FH "STEP: add SSTSHAKEN STRSHKN STRSHKN - FAIL\n";
+            $result = 0;
+            goto CLEANUP;
+        }else{
+            $ses_core->execCmd("y");
+            print FH "STEP: add SSTSHAKEN STRSHKN STRSHKN - Pass\n";
+        }
+    }
+# config table LTDATA
+    if ($LTDATA_config) {
+        unless (grep /TABLE:.*LTDATA/, $ses_core->execCmd("table LTDATA")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table LTDATA' ");
+        }
+        $ses_core->execCmd("add ISDN 85 LSERV LSERV STRSHKN ADMINENTERED KINGOFKINGLTDATA");
+        $ses_core->execCmd("y");
+        print FH "STEP: add ISDN 85 LSERV LSERV STRSHKN ADMINENTERED KINGOFKINGLTDATA - Pass\n";
+    }
+# config table ofcvar
+    &table_ofcvar_default();
 ################################## Cleanup 000 ##################################
     CLEANUP:
     $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup 000 ##################################");
@@ -1989,7 +2073,7 @@ sub tms1287014 { #Verifying verstat parameter to be sent properly from PRI to SI
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 # config table LTDATA
     unless (grep /TABLE:.*LTDATA/, $ses_core->execCmd("table LTDATA")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table LTDATA' ");
@@ -2290,7 +2374,7 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 # config table LTDATA
     unless (grep /TABLE:.*LTDATA/, $ses_core->execCmd("table LTDATA")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table LTDATA' ");
@@ -2563,7 +2647,7 @@ sub tms1287016 { #Verifying verstat parameter to be sent properly from SIP-PBX t
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 
 # Check Trunk status
     my $idl_num;
@@ -2771,7 +2855,7 @@ sub tms1287017 { #Verifying verstat parameter to be sent properly from SIP_PBX t
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL PASS");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
 
 # Start logutil
     %input = (
@@ -2866,6 +2950,1079 @@ sub tms1287017 { #Verifying verstat parameter to be sent properly from SIP_PBX t
     }
 
     # Get PCM trace
+    # Stop Logutil
+    if ($logutil_start) {
+        unless ($ses_logutil->stopLogutil()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop logutil ");
+        }
+        @output = $ses_logutil->execCmd("open trap");
+        unless (grep /Log empty/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Trap is generated on core ");
+            $result = 0;
+            print FH "STEP: Check Trap - FAIL\n";
+        } else {
+            print FH "STEP: Check trap - PASS\n";
+        }
+        @output = $ses_logutil->execCmd("open swerr");
+        unless ((grep /Log empty/, @output) or grep /MTCMAINP|SYSAUDP|USRSYSMG|CALLP|TDLDPR|CXNADDRV|TPCIPPR|NBDAUDIT|MTCAUXP|TPCIPPR/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Swerr is generated on core ");
+            $result = 0;
+            print FH "STEP: Check SWERR - FAIL\n";
+        } else {
+            print FH "STEP: Check SWERR - PASS\n";
+        }
+    }
+
+    close(FH);
+    &Luan_cleanup();
+    # check the result var to know the TC is passed or failed
+    &Luan_checkResult($tcid, $result);
+}
+sub tms1287018 { #Callp service - 3WC join conference via SST trunk with Pphone line as originator
+    $logger->debug(__PACKAGE__ . " Inside test case tms1287018");
+
+########################### Variables Declaration #############################
+    $tcid = "tms1287018";
+    my $execution_logs = $tcid.'_ExecutionLogs_'.$datestamp.'.txt';
+    my $result = 1;
+
+    open(FH,'>',$execution_logs) or die $!;
+    move($dir."/".$execution_logs,"/home/".$user_name."/ats_user/logs/SHAKEN19_SV");
+
+    my @list_dn = ($db_line{$tc_line{$tcid}[0]}{-dn}, $db_line{$tc_line{$tcid}[1]}{-dn}, $db_line{$tc_line{$tcid}[2]}{-dn});
+    my @list_line = ($db_line{$tc_line{$tcid}[0]}{-line}, $db_line{$tc_line{$tcid}[1]}{-line}, $db_line{$tc_line{$tcid}[2]}{-line});
+    my @list_region = ($db_line{$tc_line{$tcid}[0]}{-region}, $db_line{$tc_line{$tcid}[1]}{-region}, $db_line{$tc_line{$tcid}[2]}{-region});
+    my @list_len = ($db_line{$tc_line{$tcid}[0]}{-len}, $db_line{$tc_line{$tcid}[1]}{-len}, $db_line{$tc_line{$tcid}[2]}{-len});
+    my @list_line_info = ($db_line{$tc_line{$tcid}[0]}{-info}, $db_line{$tc_line{$tcid}[1]}{-info}, $db_line{$tc_line{$tcid}[2]}{-info});
+
+    my $initialize_done = 0;
+    my $logutil_start = 0;
+    my $calltrak_start = 0;
+    my $add_feature_lineA = 0;
+    my $flag = 1;
+    my (@list_file_name, $dialed_num, @callTrakLogs );
+    
+################################# LOGIN #######################################
+    unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 - PASS\n";
+    }
+    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
+        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
+        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
+    }
+    unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for Logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for Logutil - PASS\n";
+    }
+    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for calltrak - PASS\n";
+    }
+
+    unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core - PASS\n";
+    }
+
+    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
+    }
+
+############### Test Specific configuration & Test Tool Script Execution #################
+# config table ofcvar
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
+
+# Check line status
+    for (my $i = 0; $i <= $#list_dn; $i++){
+        %input = (
+                    -function => ['OUT','NEW'], 
+                    -lineDN => $list_dn[$i], 
+                    -lineType => '', 
+                    -len => '', 
+                    -lineInfo => $list_line_info[$i]
+                );
+        unless ($ses_core->resetLine(%input)) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] cannot reset");
+            print FH "STEP: Reset line $list_dn[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Reset line $list_dn[$i] - PASS\n";
+        }
+		
+        unless (grep /IDL/, $ses_core->coreLineGetStatus($list_dn[$i])) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] is not IDL");
+            print FH "STEP: Check line $list_dn[$i] status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check line $list_dn[$i] status- PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+ 
+# Check Trunk status
+    my $idl_num;
+    foreach ($db_trunk{'t15_sst'}{-clli}) {
+        $idl_num = 0;
+        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+        foreach (@output) {
+            if (/tk_idle .* (\d+)/) {
+                $idl_num = $1;
+                last;
+            }
+        }
+        unless ($idl_num) {
+            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+            print FH "STEP: Check trunk $_ status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check trunk $_ status- PASS\n";
+        }
+    }
+    unless ($flag) {
+        $result = 0;
+        goto CLEANUP;
+    }
+# Add 3WC to line A
+    unless ($ses_core->callFeature(-featureName => "3WC", -dialNumber => $list_dn[0], -deleteFeature => 'No')) {
+		$logger->error(__PACKAGE__ . " $tcid: Cannot add 3WC for line $list_dn[0]");
+		print FH "STEP: add 3WC for line $list_dn[0] - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: add 3WC for line $list_dn[0] - PASS\n";
+    }
+    $add_feature_lineA = 1;
+    
+# Initialize Call
+    %input = (
+                -cas_server => [@cas_server],
+                -list_port => [@list_line],
+                -tone_type => 0
+             );
+    unless($ses_glcas->initializeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
+		print FH "STEP: Initialize Call - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Initialize Call - PASS\n";
+    }
+
+    for (my $i = 0; $i <= $#list_line; $i++){
+        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
+            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: set region for line $list_line[$i] - PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+    $initialize_done = 1;
+    
+# Start logutil
+    %input = (
+                -username => [@{$core_account{-username}}[6..9]], 
+                -password => [@{$core_account{-password}}[6..9]], 
+                -logutilType => ['SWERR', 'TRAP', 'AMAB'],
+             );
+    unless ($ses_logutil->startLogutil(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start logutil");
+        print FH "STEP: start logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start logutil - PASS\n";
+    }
+    $logutil_start = 1;
+
+###################### Call flow ###########################
+# start Calltrak 
+    %input = (-traceType => 'msgtrace', 
+              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -dialedNumber => [$list_dn[0],$list_dn[2]]); 
+    unless ($ses_calltrak->startCalltrak(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
+        print FH "STEP: start Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start Calltrak - PASS\n";
+    }
+    $calltrak_start = 1;
+
+# Make call A to B and A flash
+    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
+    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $dialed_num = $trunk_access_code . $1;
+    %input = (
+                -lineA => $list_line[0],
+                -lineB => $list_line[1],
+                -dialed_number => $dialed_num,
+                -regionA => $list_region[0],
+                -regionB => $list_region[1],
+                -check_dial_tone => 'y',
+                -digit_on => 300,
+                -digit_off => 300,
+                -detect => ['RINGBACK','RINGING'],
+                -ring_on => [0],
+                -ring_off => [0],
+                -on_off_hook => ['offB'],
+                -send_receive => ['TESTTONE 1000'],
+                -flash => 'A'
+                );
+    unless ($ses_glcas->makeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST and A flash");
+        print FH "STEP: A calls B via SST and A flash  - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: A calls B via SST and A flash - PASS\n";
+    }
+# Make call A to C and A flash , A,B,C join conf
+    $dialed_num = $list_dn[2] =~ /\d{3}(\d+)/;
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $dialed_num = $trunk_access_code . $1;
+    %input = (
+                -lineA => $list_line[0],
+                -lineB => $list_line[2],
+                -dialed_number => $dialed_num,
+                -regionA => $list_region[0],
+                -regionB => $list_region[2],
+                -check_dial_tone => 'y',
+                -digit_on => 300,
+                -digit_off => 300,
+                -detect => ['RINGBACK','RINGING'],
+                -ring_on => [0],
+                -ring_off => [0],
+                -on_off_hook => ['offB'],
+                -send_receive => ['TESTTONE 1000'],
+                -flash => 'A'
+                );
+    unless ($ses_glcas->makeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls C via SST and A flash");
+        print FH "STEP: A calls C via SST and A flash  - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: A calls C via SST and A flash - PASS\n";
+    }
+# Check speech path between A and B
+    %input = (
+                -list_port => [$list_line[0],$list_line[1]], 
+                -checking_type => ['TESTTONE','DIGITS'], 
+                -tone_duration => 2000, 
+                -cas_timeout => 50000
+             );
+    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and C ");
+        print FH "STEP: check speech path between A and B - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: check speech path between A and B - PASS\n";
+    }
+# Check speech path between A and C
+    %input = (
+                -list_port => [$list_line[0],$list_line[2]], 
+                -checking_type => ['TESTTONE','DIGITS'], 
+                -tone_duration => 2000, 
+                -cas_timeout => 50000
+             );
+    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and C ");
+        print FH "STEP: check speech path between A and C - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: check speech path between A and C - PASS\n";
+    }
+# Stop CallTrak
+    if ($calltrak_start) {
+        unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop calltrak ");
+        }
+        else {
+            print FH "STEP: Stop calltrak - PASS\n";
+        }
+        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+    }
+  
+################################## Cleanup tms1287018 ##################################
+    CLEANUP:
+    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1287018 ##################################");
+
+    # Cleanup call
+    if ($initialize_done) {
+        foreach (@list_line){
+            unless($ses_glcas->onhookCAS(-line_port => $_, -wait_for_event_time => $wait_for_event_time)) {
+                $logger->error(__PACKAGE__ . ": Cannot onhook line $_");
+            }
+        }
+        unless($ses_glcas->cleanupCAS(-list_port => [@list_line])) {
+            $logger->error(__PACKAGE__ . ": Cannot cleanup GLCAS");
+            print FH "STEP: cleanup GLCAS - FAIL\n";
+        } else {
+            print FH "STEP: cleanup GLCAS - PASS\n";
+        }
+    }
+    # remove 3WC from line A
+    if ($add_feature_lineA) {
+        unless ($ses_core->callFeature(-featureName => '3WC', -dialNumber => $list_dn[0], -deleteFeature => 'Yes')) {
+            $logger->error(__PACKAGE__ . " $tcid: Remove 3WC from line $list_dn[0]");
+            print FH "STEP: Remove 3WC from line $list_dn[0] - FAIL\n";
+        } else {
+            print FH "STEP: Remove 3WC from line $list_dn[0] - PASS\n";
+        }
+    }
+    # Stop Logutil
+    if ($logutil_start) {
+        unless ($ses_logutil->stopLogutil()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop logutil ");
+        }
+        @output = $ses_logutil->execCmd("open trap");
+        unless (grep /Log empty/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Trap is generated on core ");
+            $result = 0;
+            print FH "STEP: Check Trap - FAIL\n";
+        } else {
+            print FH "STEP: Check trap - PASS\n";
+        }
+        @output = $ses_logutil->execCmd("open swerr");
+        unless ((grep /Log empty/, @output) or grep /MTCMAINP|SYSAUDP|USRSYSMG|CALLP|TDLDPR|CXNADDRV|TPCIPPR|NBDAUDIT|MTCAUXP|TPCIPPR/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Swerr is generated on core ");
+            $result = 0;
+            print FH "STEP: Check SWERR - FAIL\n";
+        } else {
+            print FH "STEP: Check SWERR - PASS\n";
+        }
+    }
+
+    close(FH);
+    &Luan_cleanup();
+    # check the result var to know the TC is passed or failed
+    &Luan_checkResult($tcid, $result);
+}
+sub tms1287020 { #Callp service - CXR tranfer to SIP line via SST trunk 
+    $logger->debug(__PACKAGE__ . " Inside test case tms1287020");
+
+########################### Variables Declaration #############################
+    $tcid = "tms1287020";
+    my $execution_logs = $tcid.'_ExecutionLogs_'.$datestamp.'.txt';
+    my $result = 1;
+
+    open(FH,'>',$execution_logs) or die $!;
+    move($dir."/".$execution_logs,"/home/".$user_name."/ats_user/logs/SHAKEN19_SV");
+
+    my @list_dn = ($db_line{$tc_line{$tcid}[0]}{-dn}, $db_line{$tc_line{$tcid}[1]}{-dn}, $db_line{$tc_line{$tcid}[2]}{-dn});
+    my @list_line = ($db_line{$tc_line{$tcid}[0]}{-line}, $db_line{$tc_line{$tcid}[1]}{-line}, $db_line{$tc_line{$tcid}[2]}{-line});
+    my @list_region = ($db_line{$tc_line{$tcid}[0]}{-region}, $db_line{$tc_line{$tcid}[1]}{-region}, $db_line{$tc_line{$tcid}[2]}{-region});
+    my @list_len = ($db_line{$tc_line{$tcid}[0]}{-len}, $db_line{$tc_line{$tcid}[1]}{-len}, $db_line{$tc_line{$tcid}[2]}{-len});
+    my @list_line_info = ($db_line{$tc_line{$tcid}[0]}{-info}, $db_line{$tc_line{$tcid}[1]}{-info}, $db_line{$tc_line{$tcid}[2]}{-info});
+
+    my $initialize_done = 0;
+    my $logutil_start = 0;
+    my $calltrak_start = 0;
+    my $add_feature_lineB = 0;
+    my $flag = 1;
+    my (@list_file_name, $dialed_num, @callTrakLogs );
+    
+################################# LOGIN #######################################
+    unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 - PASS\n";
+    }
+    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
+        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
+        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
+    }
+    unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for Logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for Logutil - PASS\n";
+    }
+    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for calltrak - PASS\n";
+    }
+
+    unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core - PASS\n";
+    }
+
+    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
+    }
+
+############### Test Specific configuration & Test Tool Script Execution #################
+# config table ofcvar
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
+
+# Check line status
+    for (my $i = 0; $i <= $#list_dn; $i++){
+        %input = (
+                    -function => ['OUT','NEW'], 
+                    -lineDN => $list_dn[$i], 
+                    -lineType => '', 
+                    -len => '', 
+                    -lineInfo => $list_line_info[$i]
+                );
+        unless ($ses_core->resetLine(%input)) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] cannot reset");
+            print FH "STEP: Reset line $list_dn[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Reset line $list_dn[$i] - PASS\n";
+        }
+		
+        unless (grep /IDL/, $ses_core->coreLineGetStatus($list_dn[$i])) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] is not IDL");
+            print FH "STEP: Check line $list_dn[$i] status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check line $list_dn[$i] status- PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+ 
+# Check Trunk status
+    my $idl_num;
+    foreach ($db_trunk{'t15_sst'}{-clli}) {
+        $idl_num = 0;
+        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+        foreach (@output) {
+            if (/tk_idle .* (\d+)/) {
+                $idl_num = $1;
+                last;
+            }
+        }
+        unless ($idl_num) {
+            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+            print FH "STEP: Check trunk $_ status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check trunk $_ status- PASS\n";
+        }
+    }
+    unless ($flag) {
+        $result = 0;
+        goto CLEANUP;
+    }
+# Initialize Call
+    %input = (
+                -cas_server => [@cas_server],
+                -list_port => [@list_line],
+                -tone_type => 0
+             );
+    unless($ses_glcas->initializeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
+		print FH "STEP: Initialize Call - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Initialize Call - PASS\n";
+    }
+
+    for (my $i = 0; $i <= $#list_line; $i++){
+        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
+            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: set region for line $list_line[$i] - PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+    $initialize_done = 1;
+# Add CXR to line B
+    unless ($ses_core->callFeature(-featureName => "CXR CTALL Y 12 STD", -dialNumber => $list_dn[1], -deleteFeature => 'No')) {
+		$logger->error(__PACKAGE__ . " $tcid: Cannot add CXR for line $list_dn[1]");
+		print FH "STEP: add CXR for line $list_dn[1] - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: add CXR for line $list_dn[1] - PASS\n";
+    }
+    $add_feature_lineB = 1;
+
+# Start logutil
+    %input = (
+                -username => [@{$core_account{-username}}[6..9]], 
+                -password => [@{$core_account{-password}}[6..9]], 
+                -logutilType => ['SWERR', 'TRAP', 'AMAB'],
+             );
+    unless ($ses_logutil->startLogutil(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start logutil");
+        print FH "STEP: start logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start logutil - PASS\n";
+    }
+    $logutil_start = 1;
+
+###################### Call flow ###########################
+# start Calltrak 
+    %input = (-traceType => 'msgtrace', 
+              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -dialedNumber => [$list_dn[0],$list_dn[1]]); 
+    unless ($ses_calltrak->startCalltrak(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
+        print FH "STEP: start Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start Calltrak - PASS\n";
+    }
+    $calltrak_start = 1;
+
+# Make call A to B and B flash
+    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
+    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $dialed_num = $trunk_access_code . $1;
+    %input = (
+                -lineA => $list_line[0],
+                -lineB => $list_line[1],
+                -dialed_number => $dialed_num,
+                -regionA => $list_region[0],
+                -regionB => $list_region[1],
+                -check_dial_tone => 'y',
+                -digit_on => 300,
+                -digit_off => 300,
+                -detect => ['RINGBACK','RINGING'],
+                -ring_on => [0],
+                -ring_off => [0],
+                -on_off_hook => ['offB'],
+                -send_receive => ['TESTTONE 1000'],
+                -flash => 'B'
+                );
+    unless ($ses_glcas->makeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST and B flash");
+        print FH "STEP: A calls B via SST and B flash  - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: A calls B via SST and B flash - PASS\n";
+    }
+#B transfers call to C
+    %input = (
+                -line_port => $list_line[1],
+                -dial_tone_duration => 1000,
+                -cas_timeout => 50000,
+                -wait_for_event_time => $wait_for_event_time
+                );
+    unless ($ses_glcas->detectDialToneCAS(%input)){
+        $logger->error(__PACKAGE__ . ".$tcid: cannot detect dial tone line $list_dn[1]");
+        print FH "STEP: B hears  dial tone - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: B hears dial tone - PASS\n";
+    }
+
+    $dialed_num = $list_dn[2] =~ /\d{3}(\d+)/;
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $dialed_num = $trunk_access_code . $1;
+    %input = (
+                -line_port => $list_line[1],
+                -dialed_number => $dialed_num,
+                -digit_on => 300,
+                -digit_off => 300,
+                -wait_for_event_time => $wait_for_event_time
+                ); 
+    unless($ses_glcas->sendDigitsWithDurationCAS(%input)) {
+        $logger->error(__PACKAGE__ . ": Cannot dial C successfully");
+        print FH "STEP: B dials C - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: B dials C - PASS\n";
+    }
+    sleep(5);
+#onhook B
+    unless($ses_glcas->onhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_dn[1]");
+        print FH "STEP: Onhook line B - FAIL\n";
+        $result = 0;
+    } else {
+        print FH "STEP: Onhook line B - PASS\n";
+    }
+    sleep(2);
+# Offhook C
+    unless($ses_glcas->offhookCAS(-line_port => $list_line[2], -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . ": Cannot offhook line $list_dn[2]");
+        print FH "STEP: Offhook line C - FAIL\n";
+        $result = 0;
+    } else {
+        print FH "STEP: Offhook line C - PASS\n";
+    }
+    sleep(2);
+
+# Stop CallTrak
+    if ($calltrak_start) {
+        unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop calltrak ");
+        }
+        else {
+            print FH "STEP: Stop calltrak - PASS\n";
+        }
+        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+    }
+  
+################################## Cleanup tms1287018 ##################################
+    CLEANUP:
+    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1287018 ##################################");
+
+    # Cleanup call
+    if ($initialize_done) {
+        foreach (@list_line){
+            unless($ses_glcas->onhookCAS(-line_port => $_, -wait_for_event_time => $wait_for_event_time)) {
+                $logger->error(__PACKAGE__ . ": Cannot onhook line $_");
+            }
+        }
+        unless($ses_glcas->cleanupCAS(-list_port => [@list_line])) {
+            $logger->error(__PACKAGE__ . ": Cannot cleanup GLCAS");
+            print FH "STEP: cleanup GLCAS - FAIL\n";
+        } else {
+            print FH "STEP: cleanup GLCAS - PASS\n";
+        }
+    }
+   # remove CXR from line B
+    if ($add_feature_lineB) {
+        unless ($ses_core->callFeature(-featureName => 'CXR', -dialNumber => $list_dn[0], -deleteFeature => 'Yes')) {
+            $logger->error(__PACKAGE__ . " $tcid: Remove CXR from line $list_dn[1]");
+            print FH "STEP: Remove CXR from line $list_dn[1] - FAIL\n";
+        } else {
+            print FH "STEP: Remove CXR from line $list_dn[1] - PASS\n";
+        }
+    }
+    
+    # Get PCM trace
+    # Stop Logutil
+    if ($logutil_start) {
+        unless ($ses_logutil->stopLogutil()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop logutil ");
+        }
+        @output = $ses_logutil->execCmd("open trap");
+        unless (grep /Log empty/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Trap is generated on core ");
+            $result = 0;
+            print FH "STEP: Check Trap - FAIL\n";
+        } else {
+            print FH "STEP: Check trap - PASS\n";
+        }
+        @output = $ses_logutil->execCmd("open swerr");
+        unless ((grep /Log empty/, @output) or grep /MTCMAINP|SYSAUDP|USRSYSMG|CALLP|TDLDPR|CXNADDRV|TPCIPPR|NBDAUDIT|MTCAUXP|TPCIPPR/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Swerr is generated on core ");
+            $result = 0;
+            print FH "STEP: Check SWERR - FAIL\n";
+        } else {
+            print FH "STEP: Check SWERR - PASS\n";
+        }
+    }
+
+    close(FH);
+    &Luan_cleanup();
+    # check the result var to know the TC is passed or failed
+    &Luan_checkResult($tcid, $result);
+}
+sub tms1287021 { #Callp service - Callp service - CFB forward to SIP line via SST trunk  
+    $logger->debug(__PACKAGE__ . " Inside test case tms1287021");
+
+########################### Variables Declaration #############################
+    $tcid = "tms1287021";
+    my $execution_logs = $tcid.'_ExecutionLogs_'.$datestamp.'.txt';
+    my $result = 1;
+
+    open(FH,'>',$execution_logs) or die $!;
+    move($dir."/".$execution_logs,"/home/".$user_name."/ats_user/logs/SHAKEN19_SV");
+
+    my @list_dn = ($db_line{$tc_line{$tcid}[0]}{-dn}, $db_line{$tc_line{$tcid}[1]}{-dn}, $db_line{$tc_line{$tcid}[2]}{-dn});
+    my @list_line = ($db_line{$tc_line{$tcid}[0]}{-line}, $db_line{$tc_line{$tcid}[1]}{-line}, $db_line{$tc_line{$tcid}[2]}{-line});
+    my @list_region = ($db_line{$tc_line{$tcid}[0]}{-region}, $db_line{$tc_line{$tcid}[1]}{-region}, $db_line{$tc_line{$tcid}[2]}{-region});
+    my @list_len = ($db_line{$tc_line{$tcid}[0]}{-len}, $db_line{$tc_line{$tcid}[1]}{-len}, $db_line{$tc_line{$tcid}[2]}{-len});
+    my @list_line_info = ($db_line{$tc_line{$tcid}[0]}{-info}, $db_line{$tc_line{$tcid}[1]}{-info}, $db_line{$tc_line{$tcid}[2]}{-info});
+
+    my $initialize_done = 0;
+    my $logutil_start = 0;
+    my $calltrak_start = 0;
+    my $add_feature_lineB = 0;
+    my $add_feature_lineA = 0;
+    my $flag = 1;
+    my (@list_file_name, $dialed_num, @callTrakLogs );
+    
+################################# LOGIN #######################################
+    unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 - PASS\n";
+    }
+    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
+        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
+        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
+    }
+    unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for Logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for Logutil - PASS\n";
+    }
+    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for calltrak - PASS\n";
+    }
+
+    unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core - PASS\n";
+    }
+
+    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
+    }
+
+############### Test Specific configuration & Test Tool Script Execution #################
+# Check line status
+    for (my $i = 0; $i <= $#list_dn; $i++){
+        %input = (
+                    -function => ['OUT','NEW'], 
+                    -lineDN => $list_dn[$i], 
+                    -lineType => '', 
+                    -len => '', 
+                    -lineInfo => $list_line_info[$i]
+                );
+        unless ($ses_core->resetLine(%input)) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] cannot reset");
+            print FH "STEP: Reset line $list_dn[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Reset line $list_dn[$i] - PASS\n";
+        }
+		
+        unless (grep /IDL/, $ses_core->coreLineGetStatus($list_dn[$i])) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] is not IDL");
+            print FH "STEP: Check line $list_dn[$i] status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check line $list_dn[$i] status- PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+ 
+# Check Trunk status
+    my $idl_num;
+    foreach ($db_trunk{'t15_sst'}{-clli}) {
+        $idl_num = 0;
+        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+        foreach (@output) {
+            if (/tk_idle .* (\d+)/) {
+                $idl_num = $1;
+                last;
+            }
+        }
+        unless ($idl_num) {
+            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+            print FH "STEP: Check trunk $_ status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check trunk $_ status- PASS\n";
+        }
+    }
+    unless ($flag) {
+        $result = 0;
+        goto CLEANUP;
+    }
+# config table ofcvar
+    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
+    }
+    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
+    }
+    foreach ('cha','y y','y') {
+        unless ($ses_core->execCmd($_)) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
+            last;
+        }
+    }
+    $ses_core->execCmd("abort");
+    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
+        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
+    }
+    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
+    }
+    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
+        unless ($ses_core->execCmd($_)) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
+            last;
+        }
+    }
+    $ses_core->execCmd("abort");
+    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
+        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
+    }
+   
+
+# Add CFB to line B
+    unless ($ses_core->callFeature(-featureName => "CFB N $list_dn[2]", -dialNumber => $list_dn[1], -deleteFeature => 'No')) {
+		$logger->error(__PACKAGE__ . " $tcid: Cannot add CFD for line $list_dn[1]");
+		print FH "STEP: add CFD for line $list_dn[1] - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: add CFD for line $list_dn[1] - PASS\n";
+    }
+    $add_feature_lineB = 1;
+# Initialize Call
+    %input = (
+                -cas_server => [@cas_server],
+                -list_port => [@list_line],
+                -tone_type => 0
+             );
+    unless($ses_glcas->initializeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
+		print FH "STEP: Initialize Call - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Initialize Call - PASS\n";
+    }
+
+    for (my $i = 0; $i <= $#list_line; $i++){
+        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
+            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: set region for line $list_line[$i] - PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+    $initialize_done = 1;
+
+# Start logutil
+    %input = (
+                -username => [@{$core_account{-username}}[6..9]], 
+                -password => [@{$core_account{-password}}[6..9]], 
+                -logutilType => ['SWERR', 'TRAP', 'AMAB'],
+             );
+    unless ($ses_logutil->startLogutil(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start logutil");
+        print FH "STEP: start logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start logutil - PASS\n";
+    }
+    $logutil_start = 1;
+    
+
+###################### Call flow ###########################
+# start Calltrak 
+    %input = (-traceType => 'msgtrace', 
+              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -dialedNumber => [$list_dn[0],$list_dn[1]]); 
+    unless ($ses_calltrak->startCalltrak(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
+        print FH "STEP: start Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start Calltrak - PASS\n";
+    }
+    $calltrak_start = 1;
+# Offhook B
+    unless($ses_glcas->offhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . ": Cannot offhook line $list_dn[0]");
+        print FH "STEP: Offhook line B - FAIL\n";
+        $result = 0;
+    } else {
+        print FH "STEP: Offhook line B - PASS\n";
+    }
+# Make call A to B  fw to C
+    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
+    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $dialed_num = $trunk_access_code . $1;
+    %input = (
+                -lineA => $list_line[0],
+                -lineB => $list_line[2],
+                -dialed_number => $dialed_num,
+                -regionA => $list_region[0],
+                -regionB => $list_region[2],
+                -check_dial_tone => 'y',
+                -digit_on => 300,
+                -digit_off => 300,
+                -detect => ['RINGBACK','RINGING'],
+                -ring_on => [0],
+                -ring_off => [0],
+                -on_off_hook => ['offB'],
+                -send_receive => ['TESTTONE 1000'],
+                -flash => ''
+                );
+    unless ($ses_glcas->makeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST  fw to C");
+        print FH "STEP: A calls B via SST  fw to C  - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: A calls B via SST  fw to C - PASS\n";
+    }
+    
+# Stop CallTrak
+    if ($calltrak_start) {
+        unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop calltrak ");
+        }
+        else {
+            print FH "STEP: Stop calltrak - PASS\n";
+        }
+        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+    }
+   
+################################## Cleanup tms1287021 ##################################
+    CLEANUP:
+    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1287021 ##################################");
+
+    # Cleanup call
+    if ($initialize_done) {
+        foreach (@list_line){
+            unless($ses_glcas->onhookCAS(-line_port => $_, -wait_for_event_time => $wait_for_event_time)) {
+                $logger->error(__PACKAGE__ . ": Cannot onhook line $_");
+            }
+        }
+        unless($ses_glcas->cleanupCAS(-list_port => [@list_line])) {
+            $logger->error(__PACKAGE__ . ": Cannot cleanup GLCAS");
+            print FH "STEP: cleanup GLCAS - FAIL\n";
+        } else {
+            print FH "STEP: cleanup GLCAS - PASS\n";
+        }
+    }
+   # remove CFD from line B
+    if ($add_feature_lineB) {
+        unless ($ses_core->callFeature(-featureName => 'CFD', -dialNumber => $list_dn[1], -deleteFeature => 'Yes')) {
+            $logger->error(__PACKAGE__ . " $tcid: Remove 3WC from line $list_dn[1]");
+            print FH "STEP: Remove CFD from line $list_dn[1] - FAIL\n";
+        } else {
+            print FH "STEP: Remove CFD from line $list_dn[1] - PASS\n";
+        }
+    }
+    
     # Stop Logutil
     if ($logutil_start) {
         unless ($ses_logutil->stopLogutil()) {
