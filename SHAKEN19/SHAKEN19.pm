@@ -442,7 +442,7 @@ sub ACallBViaSSTBySipp{
 
 our @TESTCASES = (
                     # "TC0", #set up lab
-                    # "tms1286666",	#Provisioning_Activate de-activate SOC CS2C0009
+                    "tms1286666",	#Provisioning_Activate de-activate SOC CS2C0009
                     # "tms1286667",	#Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping PASS PASS PASS
                     # "tms1286668",	#Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping PASS PASS FAIL
                     # "tms1286669",	#Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping PASS FAIL FAIL
@@ -465,7 +465,7 @@ our @TESTCASES = (
                     # "tms1286686",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
                     # "tms1286687",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
                     # "tms1286688",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
-                    "tms1286689",	#FAILwithjira Verifying verstat parameter to be sent properly from PRI to SIP Line
+                    # "tms1286689",	#FAILwithjira Verifying verstat parameter to be sent properly from PRI to SIP Line
                     # "tms1286690",	#VFAILwithjira erifying verstat parameter to be sent properly from PRI to SIP_PBX
                     # "tms1286691",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
                     # "tms1286692",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
@@ -476,8 +476,8 @@ our @TESTCASES = (
                     # "tms1286697",	#Verify Verstat results shall be configurable based on the attestation level.   TN-Validation-Failed can be defined as B & C
                     # "tms1286698",	#Verify Verstat results shall be configurable based on the attestation level.   TN-Validation-Failed can be defined as C only.
                     # "tms1286699",	#Verify Verstat results shall be configurable based on the attestation level.   No-TN-Validation shall be applied where no attestation data is received.
-                    # "tms1286700",	#After core and gwc mtc actions, checking the feature is still working.
-                    # # "tms1286701",	#While SOC is IDLE, checking the feature is not working
+                    "tms1286700",	#After core and gwc mtc actions, checking the feature is still working.
+                    "tms1286701",	#While SOC is IDLE, checking the feature is not working
                     # "tms1286702",	#While STRSHKN_Pass_Verstat is N, make sure the feature is NOT working for non-local calls
                     # "tms1286703",	#While STRSHKN_Build_Pass_Verstat is N , make sure the feature is NOT working for local calls
                     # "tms1286704",	#OM_Verify Display oms : STRSHKN1 is support 
@@ -490,8 +490,8 @@ our @TESTCASES = (
                     # "tms1286711",	#OM_Verify New OM STRSHKN value VERSTATC
                     # "tms1286712",	#OM_Verify New OM STRSHKN value VPASSED
                     # "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
-                    # "tms1303242",	#After restart cold, checking the OFCVAR Options
-                    # "tms1303243",	#After restart reload, checking the OFCVAR Options
+                    "tms1303242",	#After restart cold, checking the OFCVAR Options
+                    "tms1303243",	#After restart reload, checking the OFCVAR Options
                     #  "tms1303244",	#Error path_set STRSHKN_ENABLED Y Y when The Stir Shaken SOC CS2B0009 is NOT Enabled
                     #  "tms1303245",	#Error path_set STRSHKN_ENABLED Y N when The Stir Shaken SOC CS2B0009 is NOT Enabled
                     #  "tms1303246",	#Error path_set STRSHKN_ENABLED N Y when The Stir Shaken SOC CS2B0009 is NOT Enabled            
@@ -6409,7 +6409,7 @@ sub tms1286689 { #Verifying verstat parameter to be sent properly from PRI to SI
     } else {
         print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
-
+    sleep(5);
 
 # Stop CallTrak
     if ($calltrak_start) {
@@ -6724,8 +6724,7 @@ sub tms1286690 { #Verifying verstat parameter to be sent properly from PRI to SI
     } else {
         print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
-
-
+    sleep(5);
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -7483,7 +7482,7 @@ sub tms1286693 { #Verify the attestation value shall be used to build and pass a
     } else {
         print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
-
+    sleep(5);
 
 # Stop CallTrak
     if ($calltrak_start) {
@@ -9355,23 +9354,6 @@ sub tms1286701 { #While SOC is IDLE, checking the feature is not working
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-# Disable SOC
-    if (grep /exceeded/, $ses_core->execCmd("SOC")) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'SOC' ");
-            print FH "STEP: execute command 'SOC' - FAIL\n";
-            $result = 0;
-            goto CLEANUP;
-    }
-    if (grep /Shaken.*ON/,@temp = $ses_core->execCmd("select option CS2C0009")) {
-        $logger->error(__PACKAGE__ . " $tcid: option CS2C0009  is Ensable ");
-        if (grep /entering/, $ses_core->execCmd("assign STATE IDLE to CS2C0009")) {
-            if (grep /disabled/, $ses_core->execCmd("Stir\/Shaken")) {
-                print FH "STEP: Disable option CS2C0009 - PASS \n";
-            }
-        }             
-    }else{
-        print FH "STEP: Disable option CS2C0009 - PASS \n";
-    }
 
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
@@ -9490,6 +9472,23 @@ sub tms1286701 { #While SOC is IDLE, checking the feature is not working
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
+# Disable SOC
+    if (grep /exceeded/, $ses_core->execCmd("SOC")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'SOC' ");
+            print FH "STEP: execute command 'SOC' - FAIL\n";
+            $result = 0;
+            goto CLEANUP;
+    }
+    if (grep /Shaken.*ON/,@temp = $ses_core->execCmd("select option CS2C0009")) {
+        $logger->error(__PACKAGE__ . " $tcid: option CS2C0009  is Ensable ");
+        if (grep /entering/, $ses_core->execCmd("assign STATE IDLE to CS2C0009")) {
+            if (grep /disabled/, $ses_core->execCmd("Stir\/Shaken")) {
+                print FH "STEP: Disable option CS2C0009 - PASS \n";
+            }
+        }             
+    }else{
+        print FH "STEP: Disable option CS2C0009 - PASS \n";
+    }
 
 # A calls B via trunk and hears ringback then B ring and check speech path
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
@@ -9538,7 +9537,12 @@ sub tms1286701 { #While SOC is IDLE, checking the feature is not working
             print FH "STEP: Check STRSHKN_IE IE - Pass\n";
         }
     }
-# Enable SOC
+
+ 
+################################## Cleanup tms1286701 ##################################
+    CLEANUP:
+    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1286701 ##################################");
+    # Enable SOC
     if (grep /Shaken.*IDLE/,@temp = $ses_core->execCmd("select option CS2C0009")) {
         $logger->error(__PACKAGE__ . " $tcid: option CS2C0009  is Disable ");
         if (grep /Done/, $ses_core->execCmd("assign rtu JFCM9397UKE4YRCGBWGZ to CS2C0009")) {            
@@ -9552,11 +9556,6 @@ sub tms1286701 { #While SOC is IDLE, checking the feature is not working
     }else{
         print FH "STEP: Enable option CS2C0009 - PASS \n";
     }
- 
-################################## Cleanup tms1286701 ##################################
-    CLEANUP:
-    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1286701 ##################################");
-
     # Cleanup call
     if ($initialize_done) {
         foreach (@list_line){
@@ -12842,6 +12841,8 @@ sub tms1303242 { #After restart cold, checking the OFCVAR Options
 # config table ofcvar
     &table_ofcvar_default();
 # Warm Swact Core by cmd: restart warm active
+    $ses_core->execCmd("logout");
+    sleep(15);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
             print FH "STEP: Go to CLI - PASS\n"; 
@@ -13005,6 +13006,8 @@ sub tms1303243 { #After restart reload, checking the OFCVAR Options
 # config table ofcvar
     &table_ofcvar_default();
 # Warm Swact Core by cmd: restart warm active
+    $ses_core->execCmd("logout");
+    sleep(15);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
             print FH "STEP: Go to CLI - PASS\n"; 
