@@ -442,7 +442,7 @@ sub ACallBViaSSTBySipp{
 
 our @TESTCASES = (
                     # "TC0", #set up lab
-                    "tms1286666",	#Provisioning_Activate de-activate SOC CS2C0009
+                    # "tms1286666",	#Provisioning_Activate de-activate SOC CS2C0009
                     # "tms1286667",	#Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping PASS PASS PASS
                     # "tms1286668",	#Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping PASS PASS FAIL
                     # "tms1286669",	#Provisioning_office parameters datafil control STRSHKN_Verstat_Mapping PASS FAIL FAIL
@@ -458,7 +458,7 @@ our @TESTCASES = (
                     # "tms1286679",	#Core cold swact during signaling association , callp dropped, check the recovery and we can establish a new call with Attestation and Tagging properly after that
                     # "tms1286680",	#GWC cold swact during signaling association , callp dropped, check the recovery and we can establish a new call with Attestation and Tagging properly after that
                     # "tms1286681",	#SST cold swact during signaling association , callp dropped, check the recovery and we can establish a new call with Attestation and Tagging properly after that
-                    # "tms1286682",	#Bsy_RTS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
+                    "tms1286682",	#Bsy_RTS the originator or DPT trunk during signaling association , callp no dropped and we can establish a new call with Attestation and Tagging properly after recovered.
                     # "tms1286683",	#BSY_RTS_FRLS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
                     # "tms1286684",	#For non_local calls, test by including different optional parameter in ATP with STRSHKN optional parameter
                     # "tms1286685",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
@@ -476,8 +476,8 @@ our @TESTCASES = (
                     # "tms1286697",	#Verify Verstat results shall be configurable based on the attestation level.   TN-Validation-Failed can be defined as B & C
                     # "tms1286698",	#Verify Verstat results shall be configurable based on the attestation level.   TN-Validation-Failed can be defined as C only.
                     # "tms1286699",	#Verify Verstat results shall be configurable based on the attestation level.   No-TN-Validation shall be applied where no attestation data is received.
-                    "tms1286700",	#After core and gwc mtc actions, checking the feature is still working.
-                    "tms1286701",	#While SOC is IDLE, checking the feature is not working
+                    # "tms1286700",	#After core and gwc mtc actions, checking the feature is still working.
+                    # "tms1286701",	#While SOC is IDLE, checking the feature is not working
                     # "tms1286702",	#While STRSHKN_Pass_Verstat is N, make sure the feature is NOT working for non-local calls
                     # "tms1286703",	#While STRSHKN_Build_Pass_Verstat is N , make sure the feature is NOT working for local calls
                     # "tms1286704",	#OM_Verify Display oms : STRSHKN1 is support 
@@ -490,8 +490,8 @@ our @TESTCASES = (
                     # "tms1286711",	#OM_Verify New OM STRSHKN value VERSTATC
                     # "tms1286712",	#OM_Verify New OM STRSHKN value VPASSED
                     # "tms1286713",	#OM_Verify New OM STRSHKN value VFAILED
-                    "tms1303242",	#After restart cold, checking the OFCVAR Options
-                    "tms1303243",	#After restart reload, checking the OFCVAR Options
+                    # "tms1303242",	#After restart cold, checking the OFCVAR Options
+                    # "tms1303243",	#After restart reload, checking the OFCVAR Options
                     #  "tms1303244",	#Error path_set STRSHKN_ENABLED Y Y when The Stir Shaken SOC CS2B0009 is NOT Enabled
                     #  "tms1303245",	#Error path_set STRSHKN_ENABLED Y N when The Stir Shaken SOC CS2B0009 is NOT Enabled
                     #  "tms1303246",	#Error path_set STRSHKN_ENABLED N Y when The Stir Shaken SOC CS2B0009 is NOT Enabled            
@@ -1385,6 +1385,8 @@ sub tms1286675 { #After restart warm, checking the OFCVAR Options
         goto CLEANUP;
     }
     $ses_core->execCmd("sosAgent vca show VCA");
+    
+    $logger->debug(__PACKAGE__ . " $tcid: Sleep 800s wait core active" );
     sleep (800);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
@@ -1505,23 +1507,6 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
     } else {
         print FH "STEP: Login Server 53 for GLCAS - PASS\n";
     }
-    unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
-        print FH "STEP: Login TMA15 for Logutil - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 for Logutil - PASS\n";
-    }
-    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
-        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 for calltrak - PASS\n";
-    }
-
     unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
 		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
 		print FH "STEP: Login TMA15 core - FAIL\n";
@@ -1529,15 +1514,6 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
         goto CLEANUP;
     } else {
         print FH "STEP: Login TMA15 core - PASS\n";
-    }
-
-    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
 
 ############### Test Specific configuration & Test Tool Script Execution #################
@@ -1631,21 +1607,6 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
     }
     $initialize_done = 1;
     
-# Start logutil
-    %input = (
-                -username => [@{$core_account{-username}}[6..9]], 
-                -password => [@{$core_account{-password}}[6..9]], 
-                -logutilType => ['SWERR', 'TRAP', 'AMAB'],
-             );
-    unless ($ses_logutil->startLogutil(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot start logutil");
-        print FH "STEP: start logutil - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: start logutil - PASS\n";
-    }
-    $logutil_start = 1;
 
 ###################### Call flow ###########################
 # A calls B via trunk and hears ringback then B ring and check speech path
@@ -1708,6 +1669,8 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
     }
     $ses_core->execCmd("restart warm active");
     @output = $ses_core->{conn}->print("y");
+
+    $logger->debug(__PACKAGE__ . " $tcid: wait Connection closed" );
     unless ($ses_core->{conn}->waitfor(-match => '/Connection closed/', -timeout => 300)){
         $logger->error(__PACKAGE__ . ".$tcid: restart warm active");
         print FH "STEP: execCmd restart warm active - FAIL\n";
@@ -1781,6 +1744,24 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
         }
     }
 # start Calltrak 
+    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for calltrak - PASS\n";
+    }
+
+    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
+    }
+
     %input = (-traceType => 'msgtrace', 
               -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
@@ -1854,28 +1835,6 @@ sub tms1286676 { #Core warm swact during signaling association , callp no droppe
     }
 
     # Get PCM trace
-    # Stop Logutil
-    if ($logutil_start) {
-        unless ($ses_logutil->stopLogutil()) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot stop logutil ");
-        }
-        @output = $ses_logutil->execCmd("open trap");
-        unless (grep /Log empty/, @output) {
-            $logger->error(__PACKAGE__ . " $tcid: Trap is generated on core ");
-            $result = 0;
-            print FH "STEP: Check Trap - FAIL\n";
-        } else {
-            print FH "STEP: Check trap - PASS\n";
-        }
-        @output = $ses_logutil->execCmd("open swerr");
-        unless ((grep /Log empty/, @output) or grep /MTCMAINP|SYSAUDP|USRSYSMG|CALLP|TDLDPR|CXNADDRV|TPCIPPR|NBDAUDIT|MTCAUXP|TPCIPPR/, @output) {
-            $logger->error(__PACKAGE__ . " $tcid: Swerr is generated on core ");
-            $result = 0;
-            print FH "STEP: Check SWERR - FAIL\n";
-        } else {
-            print FH "STEP: Check SWERR - PASS\n";
-        }
-    }
 
     close(FH);
     &Luan_cleanup();
@@ -2742,14 +2701,6 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
     } else {
         print FH "STEP: Login TMA15 - PASS\n";
     }
-    unless ($ses_cli1 = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
-        print FH "STEP: Login TMA15 - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 - PASS\n";
-    }
     unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
         $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
         print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
@@ -2757,22 +2708,6 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
         goto CLEANUP;
     } else {
         print FH "STEP: Login Server 53 for GLCAS - PASS\n";
-    }
-    unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
-        print FH "STEP: Login TMA15 for Logutil - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 for Logutil - PASS\n";
-    }
-    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
-        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 for calltrak - PASS\n";
     }
 
     unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
@@ -2782,23 +2717,6 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
         goto CLEANUP;
     } else {
         print FH "STEP: Login TMA15 core - PASS\n";
-    }
-    unless ($ses_cli1->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core - PASS\n";
-    }
-
-    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
     }
 
 ############### Test Specific configuration & Test Tool Script Execution #################
@@ -2892,21 +2810,6 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
     }
     $initialize_done = 1;
     
-# Start logutil
-    %input = (
-                -username => [@{$core_account{-username}}[6..9]], 
-                -password => [@{$core_account{-password}}[6..9]], 
-                -logutilType => ['SWERR', 'TRAP', 'AMAB'],
-             );
-    unless ($ses_logutil->startLogutil(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Cannot start logutil");
-        print FH "STEP: start logutil - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: start logutil - PASS\n";
-    }
-    $logutil_start = 1;
 
 ###################### Call flow ###########################
 # A calls B via trunk and hears ringback then B ring and check speech path
@@ -2938,14 +2841,8 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
         print FH "STEP: A calls B via SST - PASS\n";
     }
 # Cold Swact Core by cmd: restart cold active
-    unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
-        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
-        print FH "STEP: Login TMA20 - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA20 - PASS\n";
-    }
+    $ses_core->execCmd("logout");
+    sleep(8);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
             print FH "STEP: Go to CLI - PASS\n"; 
@@ -2975,6 +2872,9 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
     }
     $ses_core->execCmd("restart cold active");
     @output = $ses_core->{conn}->print("y");
+
+    $logger->debug(__PACKAGE__ . " $tcid: wait Connection closed" );
+
     unless ($ses_core->{conn}->waitfor(-match => '/Connection closed/', -timeout => 200)){
         $logger->error(__PACKAGE__ . ".$tcid: restart cold active");
         print FH "STEP: execCmd restart cold active - FAIL\n";
@@ -2993,6 +2893,8 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
         goto CLEANUP;
     }
     $ses_core->execCmd("sosAgent vca show VCA");
+    
+    $logger->debug(__PACKAGE__ . " $tcid: Sleep 800s wait core active" );
     sleep (800);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
@@ -3069,6 +2971,24 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
         }
     }
 # start Calltrak 
+    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for calltrak - PASS\n";
+    }
+
+    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
+    }
+
     %input = (-traceType => 'msgtrace', 
               -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
               -dialedNumber => [$list_dn[0],$list_dn[1]]); 
@@ -3138,30 +3058,6 @@ sub tms1286679 { #Core cold swact during signaling association , callp dropped, 
             print FH "STEP: cleanup GLCAS - FAIL\n";
         } else {
             print FH "STEP: cleanup GLCAS - PASS\n";
-        }
-    }
-
-    # Get PCM trace
-    # Stop Logutil
-    if ($logutil_start) {
-        unless ($ses_logutil->stopLogutil()) {
-            $logger->error(__PACKAGE__ . " $tcid: Cannot stop logutil ");
-        }
-        @output = $ses_logutil->execCmd("open trap");
-        unless (grep /Log empty/, @output) {
-            $logger->error(__PACKAGE__ . " $tcid: Trap is generated on core ");
-            $result = 0;
-            print FH "STEP: Check Trap - FAIL\n";
-        } else {
-            print FH "STEP: Check trap - PASS\n";
-        }
-        @output = $ses_logutil->execCmd("open swerr");
-        unless ((grep /Log empty/, @output) or grep /MTCMAINP|SYSAUDP|USRSYSMG|CALLP|TDLDPR|CXNADDRV|TPCIPPR|NBDAUDIT|MTCAUXP|TPCIPPR/, @output) {
-            $logger->error(__PACKAGE__ . " $tcid: Swerr is generated on core ");
-            $result = 0;
-            print FH "STEP: Check SWERR - FAIL\n";
-        } else {
-            print FH "STEP: Check SWERR - PASS\n";
         }
     }
 
@@ -3645,14 +3541,6 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
     }
 
     unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
-		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
-		print FH "STEP: Login TMA15 core - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Login TMA15 core - PASS\n";
-    }
-    unless ($ses_cli1->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
 		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
 		print FH "STEP: Login TMA15 core - FAIL\n";
         $result = 0;
@@ -4294,26 +4182,41 @@ sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling associati
     } else {
         print FH "STEP: Verify SST is busy successfully - PASS\n";
     }
-# detectNoTestToneCAS
-    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
-    }
-    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
-        $flag = 0;
-    }
-    unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
-    }
-    unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
-        $flag = 0;
-    }
-    unless ($flag){
-        print FH "STEP: Speech path is down after Bsy SST - FAIL\n";
+# # detectNoTestToneCAS
+#     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
+#     }
+#     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
+#         $flag = 0;
+#     }
+#     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
+#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
+#     }
+#     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
+#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
+#         $flag = 0;
+#     }
+#     unless ($flag){
+#         print FH "STEP: Speech path is down after Bsy SST - FAIL\n";
+#         $result = 0;
+#     }else{
+#         print FH "STEP: Speech path is down after Bsy SST - PASS\n";
+#     }
+# Check speech path between A and B
+    %input = (
+                -list_port => [$list_line[0],$list_line[1]], 
+                -checking_type => ['TESTTONE','DIGITS'], 
+                -tone_duration => 2000, 
+                -cas_timeout => 50000
+             );
+    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and B ");
+        print FH "STEP: check speech path between A and B - FAIL\n";
         $result = 0;
-    }else{
-        print FH "STEP: Speech path is down after Bsy SST - PASS\n";
+        goto CLEANUP;
+    } else {
+        print FH "STEP: check speech path between A and B - PASS\n";
     }
 
     $ses_core->execCmd("mapci nodisp;mtc;trks;DPTRKS;post g SSTSHAKEN");
