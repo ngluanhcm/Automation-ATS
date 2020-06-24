@@ -3884,7 +3884,7 @@ sub tms1286681 { #SST cold swact during signaling association , callp dropped, c
     # check the result var to know the TC is passed or failed
     &Luan_checkResult($tcid, $result);
 }
-sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling association , callp dropped and we can establish a new call with Attestation and Tagging properly after recovered.
+sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling association , callp no dropped and we can establish a new call with Attestation and Tagging properly after recovered.
     $logger->debug(__PACKAGE__ . " Inside test case tms1286682");
 
 ########################### Variables Declaration #############################
@@ -4182,27 +4182,7 @@ sub tms1286682 { #Bsy_RTS the originator or DPT trunk during signaling associati
     } else {
         print FH "STEP: Verify SST is busy successfully - PASS\n";
     }
-# # detectNoTestToneCAS
-#     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[0], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
-#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  cannot send test tone");
-#     }
-#     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[1], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
-#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  still have speech path with $list_dn[0]");
-#         $flag = 0;
-#     }
-#     unless ($ses_glcas->sendTestToneCAS(-line_port => $list_line[1], -test_tone_duration => '1000', -wait_for_event_time => $wait_for_event_time)) {
-#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[1]  cannot send test tone");
-#     }
-#     unless ($ses_glcas->detectNoTestToneCAS(-line_port => $list_line[0], -cas_timeout => 50000 , -wait_for_event_time => $wait_for_event_time)) {
-#         $logger->error(__PACKAGE__ . " $tcid: line $list_line[0]  still have speech path with $list_dn[1]");
-#         $flag = 0;
-#     }
-#     unless ($flag){
-#         print FH "STEP: Speech path is down after Bsy SST - FAIL\n";
-#         $result = 0;
-#     }else{
-#         print FH "STEP: Speech path is down after Bsy SST - PASS\n";
-#     }
+
 # Check speech path between A and B
     %input = (
                 -list_port => [$list_line[0],$list_line[1]], 
