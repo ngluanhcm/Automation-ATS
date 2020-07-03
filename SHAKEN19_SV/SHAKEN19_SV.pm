@@ -17,6 +17,8 @@ use Tie::File;
 use File::Copy;
 use Cwd qw(cwd);
 use Data::Dumper;
+use Time::HiRes qw(gettimeofday tv_interval);
+use POSIX qw(strftime);
 use threads;
 #********************************* LIST OF LIBRARIES***********************************************#
 
@@ -56,7 +58,9 @@ our $user_name;
 if ($dir =~ /home\/(\w\w*)\/ats_repos/ ) {
     $user_name = $1;
 }
-
+our ($execution_logs, $token, %args, $testsuiteId, $baseUrl);
+our $projectId = "5efd67a425db4504809aa84d";
+my $executionDate = strftime "%Y-%m-%d %H:%M:%S", localtime;
 our ($sec,$min,$hour,$mday,$mon,$year,$wday, $yday,$isdst) = localtime(time);
 our $datestamp = sprintf "%4d%02d%02d-%02d%02d%02d", $year+1900,$mon+1,$mday,$hour,$min,$sec;
 our ($ses_core, $ses_glcas, $ses_logutil,$ses_calltrak, $ses_tapi, $ses_ats, $ses_cli1, $ses_cli, $gwc_id);
@@ -240,6 +244,21 @@ sub Luan_cleanup {
     }
     return 1;
 }
+
+# sub Luan_checkResult {
+#     my ($tcid, $result, $execution_logs) = (@_);
+#     my $subname = "Luan_checkResult";
+#     $logger->debug(__PACKAGE__ . ".$tcid: Test result : $result");
+#     if ($result) { 
+#         $logger->debug(__PACKAGE__ . ".$tcid  Test case passed ");
+#             SonusQA::ATSHELPER::printPassTest($tcid);
+#             return (1, $execution_logs);
+#     } else {
+#         $logger->debug(__PACKAGE__ . ".$tcid  Test case failed ");
+#             SonusQA::ATSHELPER::printFailTest($tcid);
+#             return (0, $execution_logs);
+#     }
+# }
 
 sub Luan_checkResult {
     my ($tcid, $result) = (@_);
@@ -443,19 +462,63 @@ our @TESTCASES = (
                     # "tms1287025",	#Callp service - CHD hold a call and make a new call to SIP line via SST trunk
                     # "tms1287026",	#Callp service - CWT verify call waiting from SIP line via SST trunk
                     # "tms1287027",	#Callp service - Verify DNH feature works fine with via SST trunk
-                    "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
+                    # "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
                     # "tms1287029",	#Callp service - MLH make a basic call via SST trunk
                     # "tms1287030",	#Callp service - MADN (SCA) make a basic call via SST trunk
                     # "tms1287031",	#Callp service - Simring make a call via SST trunk
                     # "tms1287032",	#Callp service - SDN make a call via SST trunk
-                    # "tms1287033",	#OM_Verify Display oms : STRSHKN1 is support 
-                    # "tms1287034",	#OM_Verify Display oms : STRSHKN2 is support 
+                    "tms1287033",	#OM_Verify Display oms : STRSHKN1 is support 
+                    "tms1287034",	#OM_Verify Display oms : STRSHKN2 is support 
                     # "tms1287035",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
                     # "tms1287036",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
                     # "tms1287037",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
                 );
 
 ############################### Run Test #####################################
+# sub runTests {
+#     unless ( &configured ) {
+#         $logger->error(__PACKAGE__ . ": Could not configure for test suite ".__PACKAGE__); 
+#         return 0;
+#     }
+
+#     $logger->debug(__PACKAGE__ . " ======: before Opening Harness");
+#     my $harness;
+#     unless($harness = SonusQA::HARNESS->new( -suite => __PACKAGE__, -release => "$TESTSUITE->{TESTED_RELEASE}", -variant => $TESTSUITE->{TESTED_VARIANT}, -build => $TESTSUITE->{BUILD_VERSION}, -path => "ats_repos/test/setup/work")){ # Use this for real SBX Hardware.
+#         $logger->error(__PACKAGE__ . ": Could not create harness object");
+#         return 0;
+#     }
+#     $logger->debug(__PACKAGE__ . " ======: Opened Harness");  
+
+#     my $baseUrl = "http://10.1.0.75:3000";
+#     my %args = (-baseUrl => $baseUrl, -username => 'ntluan2', -password => '12345678a@A');
+#     unless($token = (SonusQA::HARNESS::login(%args))){
+#         $logger->error(__PACKAGE__ . ": Failed to Login Analytic page");
+#         return 0;
+#     }
+# 	$logger->debug(__PACKAGE__ . ": token ===  : $token");
+#     my @tests_to_run;
+
+#     # If an array is passed in use that. If not run every test.
+#     if ( @_ ) {
+#         @tests_to_run = @_;
+#     }
+#     else {
+#         @tests_to_run = @TESTCASES;
+#     }
+
+# 	# Add testsuite 
+# 	%args = (-token => $token, -baseUrl => $baseUrl, -projectId => $projectId, -source => "QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19_SV", 
+# 				-testsuiteName => 'SHAKEN19_SV', -executionDate => $executionDate, -totalTCs => scalar @tests_to_run);
+
+# 	unless($testsuiteId = (SonusQA::HARNESS::addTestsuite(%args))) {
+# 		$logger->error(__PACKAGE__ . ": Failed to Add new testsuite 'SHAKEN19_SV'");
+#         return 0;
+# 	}   
+# 	my %testcaseInfo = (-token => $token,-baseUrl => $baseUrl, -testsuiteId => $testsuiteId);
+#     $harness->{SUBROUTINE}= 1;    
+#     $harness->runTestsinSuite( \@tests_to_run, \%testcaseInfo);
+# }
+
 sub runTests {
     unless ( &configured ) {
         $logger->error(__PACKAGE__ . ": Could not configure for test suite ".__PACKAGE__); 
@@ -8862,7 +8925,7 @@ sub tms1287033 { #OM_Verify Display oms : STRSHKN1 is support
 ###################### Call flow ###########################
 # omshow STRSHKN1 active
     $ses_core->{conn}->prompt('/\>/');
-    unless (grep /ISDN\s+85/, $ses_core->execCmd("omshow STRSHKN1 active")) {
+    unless (grep /STRSHKN1/, $ses_core->execCmd("omshow STRSHKN1 active")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot omshow STRSHKN1 active");
         print FH "STEP: cannot omshow STRSHKN1 active - FAIL\n";
         $result = 0;
@@ -8877,6 +8940,7 @@ sub tms1287033 { #OM_Verify Display oms : STRSHKN1 is support
     close(FH);
     &Luan_cleanup();
     # check the result var to know the TC is passed or failed
+    # &Luan_checkResult($tcid, $result, $execution_logs);
     &Luan_checkResult($tcid, $result);
 }
 sub tms1287034 { #OM_Verify Display oms : STRSHKN2 is support 
@@ -8962,6 +9026,7 @@ sub tms1287034 { #OM_Verify Display oms : STRSHKN2 is support
     close(FH);
     &Luan_cleanup();
     # check the result var to know the TC is passed or failed
+    # &Luan_checkResult($tcid, $result, $execution_logs);
     &Luan_checkResult($tcid, $result);
 }
 sub tms1287035 { #Checking StrShkn Verstat OMs to be pegged properly for non-local calls 
