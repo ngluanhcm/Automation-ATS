@@ -151,27 +151,28 @@ our %db_line = (
                 );
    
 our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
-                'tms1287010' => ['sip_2','sip_1'],
+                'tms1287010' => ['sip_1','sip_2'],
                 'tms1287011' => ['sip_2','sip_1'],
-                'tms1287012' => ['gr303_1','sip_1'],
-                'tms1287013' => ['gr303_1','Sip_pbx'],
-                'tms1287014' => ['gr303_1','sip_1'],
-                'tms1287015' => ['gr303_1','Sip_pbx'],
+                'tms1287012' => ['gr303_1','sip_2'],
+                'tms1287013' => ['gr303_1','sip_2'],
+                'tms1287014' => ['gr303_1','sip_2'],
+                'tms1287015' => ['gr303_1','sip_2'],
                 'tms1287016' => ['sip_2','sip_1'],
                 'tms1287017' => ['sip_2','sip_1'],
                 'tms1287018' => ['gr303_1','gr303_2','sip_1'],
-                'tms1287020' => ['gr303_1','gr303_2','sip_1'],
-                'tms1287021' => ['gr303_1','gr303_2','sip_1'],                
-                'tms1287022' => ['gr303_1','gr303_2','sip_1'],
-                'tms1287023' => ['gr303_1','sip_1'],
-                'tms1287024' => ['gr303_1','sip_1'],                
-                'tms1287025' => ['gr303_1','gr303_2','sip_1'],
+                'tms1287019' => ['gr303_1','gr303_2','sip_2'],
+                'tms1287020' => ['gr303_1','gr303_2','sip_2'],
+                'tms1287021' => ['gr303_1','gr303_2','sip_2'],                
+                'tms1287022' => ['gr303_1','gr303_2','sip_2'],
+                'tms1287023' => ['gr303_1','sip_2'],
+                'tms1287024' => ['gr303_1','sip_2'],                
+                'tms1287025' => ['gr303_1','gr303_2','sip_2'],
                 'tms1287026' => ['gr303_1','gr303_2','sip_1'],
                 'tms1287027' => ['gr303_1','gr303_2','sip_1'],
-                'tms1287028' => ['gr303_1','gr303_2'],
+                'tms1287028' => ['gr303_1','sip_2'],
                 'tms1287029' => ['gr303_1','gr303_2','sip_1'],
                 'tms1287030' => ['gr303_1','gr303_2','sip_1'],
-                'tms1287031' => ['gr303_1','gr303_2','sip_1'],
+                'tms1287031' => ['gr303_1','gr303_2','sip_2'],
                 'tms1287032' => ['gr303_1','gr303_2'],
                 'tms1287033' => ['gr303_1','sip_1'],
                 'tms1287034' => ['gr303_1','sip_1'],
@@ -212,6 +213,12 @@ our %db_trunk = (
                                 -region => 'US',
                                 -clli => 'G6VZSTSPRINT2W' , # T15G9PRINT2W #G6VZSTSPRINT2W
                             },
+                't15_pri_loop' =>{
+                                -acc => 504,  #200 #504
+                                -region => 'US',
+                                -clli => 'G6VZSTSPRINTW2' , # T15G9PRINT2W #G6VZSTSPRINT2W
+                            },
+
                 't15_bpx' =>{
                                 -acc => 987,  #200 #504
                                 -region => 'US',
@@ -321,7 +328,7 @@ sub table_ofcvar_default{
     unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
     }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
+    unless (grep /STRSHKN_ENABLED/, $ses_core->execCmd("pos strshkn_enabled")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
     }
     foreach ('cha','y y','y') {
@@ -338,7 +345,7 @@ sub table_ofcvar_default{
     } else {
         print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
     }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
+    unless (grep /STRSHKN_ORIGID/, $ses_core->execCmd("pos strshkn_origID")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
     }
     foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
@@ -442,36 +449,36 @@ sub ACallBViaSSTBySipp{
 ##################################################################################
 
 our @TESTCASES = (
-                    # "TC0", #set up lab
-                    # "tms1287009",	#After restart warm, checking the OFCVAR Options
-                    # "tms1287010",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
-                    # "tms1287011",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
-                    # "tms1287012",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
-                    # "tms1287013",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
-                    # "tms1287014",	#FAILwithjira Verifying verstat parameter to be sent properly from PRI to SIP Line
-                    # "tms1287015",	#VFAILwithjira erifying verstat parameter to be sent properly from PRI to SIP_PBX
-                    # "tms1287016",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
-                    # "tms1287017",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
-                    # "tms1287018",	#Callp service - 3WC join conference via SST trunk with Pphone line as originator
-                    # "tms1287019",	#Callp service - CFU forward to SIP line via SST trunk with BRI line as originator
-                    # "tms1287020",	#Callp service - CXR tranfer to SIP line via SST trunk
-                    # "tms1287021",	#Callp service - CFB forward to SIP line via SST trunk
-                    # "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
-                    # "tms1287023",	#Callp service - SCL call to SIP line via SST trunk
-                    # "tms1287024",	#Callp service - SCS call to SIP line via SST trunk
-                    # "tms1287025",	#Callp service - CHD hold a call and make a new call to SIP line via SST trunk
-                    # "tms1287026",	#Callp service - CWT verify call waiting from SIP line via SST trunk
-                    # "tms1287027",	#Callp service - Verify DNH feature works fine with via SST trunk
-                    # "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
-                    # "tms1287029",	#Callp service - MLH make a basic call via SST trunk
-                    # "tms1287030",	#Callp service - MADN (SCA) make a basic call via SST trunk
-                    # "tms1287031",	#Callp service - Simring make a call via SST trunk
-                    # "tms1287032",	#Callp service - SDN make a call via SST trunk
+                    "TC0", #set up lab
+                    "tms1287009",	#After restart warm, checking the OFCVAR Options
+                    "tms1287010",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
+                    "tms1287011",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
+                    "tms1287012",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
+                    "tms1287013",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
+                    "tms1287014",	#Verifying verstat parameter to be sent properly from PRI to SIP Line
+                    "tms1287015",	#FVerifying verstat parameter to be sent properly from PRI to SIP_PBX
+                    "tms1287016",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
+                    "tms1287017",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
+                    "tms1287018",	#Callp service - 3WC join conference via SST trunk 
+                    "tms1287019",	#Callp service - CFU forward to SIP line via SST trunk
+                    "tms1287020",	#Callp service - CXR tranfer to SIP line via SST trunk
+                    "tms1287021",	#Callp service - CFB forward to SIP line via SST trunk
+                    "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
+                    "tms1287023",	#Callp service - SCL call to SIP line via SST trunk
+                    "tms1287024",	#Callp service - SCS call to SIP line via SST trunk
+                    "tms1287025",	#Callp service - CHD hold a call and make a new call to SIP line via SST trunk
+                    "tms1287026",	#Callp service - CWT verify call waiting from SIP line via SST trunk
+                    "tms1287027",	#Callp service - Verify DNH feature works fine with via SST trunk
+                    "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
+                    "tms1287029",	#Callp service - MLH make a basic call via SST trunk
+                    "tms1287030",	#Callp service - MADN (SCA) make a basic call via SST trunk
+                    "tms1287031",	#Callp service - Simring make a call via SST trunk
+                    "tms1287032",	#Callp service - SDN make a call via SST trunk
                     "tms1287033",	#OM_Verify Display oms : STRSHKN1 is support 
                     "tms1287034",	#OM_Verify Display oms : STRSHKN2 is support 
-                    # "tms1287035",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
-                    # "tms1287036",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
-                    # "tms1287037",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
+                    "tms1287035",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
+                    "tms1287036",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
+                    "tms1287037",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
                 );
 
 ############################### Run Test #####################################
@@ -725,7 +732,7 @@ sub TC0 {
     $dialed_num = $trunk_access_code . $1;
     unless (grep /$db_trunk{'t15_pri'}{-clli}/, $ses_core->execCmd("traver l $list_dn[0] $dialed_num b")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'traver l $list_dn[0] $dialed_num b' ");
-        print FH "STEP: fix translation line to SST\n";
+        print FH "STEP: fix translation line to pri\n";
         unless (grep /TABLE:.*OFRT/, $ses_core->execCmd("table OFRT")) {
             $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table OFRT' ");
         }
@@ -766,6 +773,52 @@ sub TC0 {
         }
         unless (grep /$db_trunk{'t15_pri'}{-clli}/, $ses_core->execCmd("traver l $list_dn[0] $dialed_num b")) {
         $logger->error(__PACKAGE__ . " $tcid: traver l $list_dn[0] $dialed_num b fail");
+        print FH "STEP: translation line to SST - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: translation line to SST - PASS\n";
+    }
+    }else{
+        print FH "STEP: translation line to SST - PASS\n"; 
+    }
+# translation Pri to SST
+    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
+    $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $dialed_num = $trunk_access_code . $1;
+    unless (grep /$db_trunk{'t15_sst'}{-clli}/, $ses_core->execCmd("traver tr $db_trunk{'t15_pri_loop'}{-clli} $dialed_num b")) {
+        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'traver tr $db_trunk{'t15_pri_loop'}{-clli} $dialed_num b' ");
+        print FH "STEP: fix translation pri to SST\n";
+
+        unless (grep /TABLE:.*HNPACONT/, $ses_core->execCmd("table HNPACONT")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table HNPACONT' ");
+        }
+        unless (grep /213/, $ses_core->execCmd("pos 212 Y 1023 0 \( 177\) \( 1\) \( 0\) \( 0\) \( 0\) 0 \$")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos 212 Y 1023 0 \( 177\) \( 1\) \( 0\) \( 0\) \( 0\) 0 \$' ");
+        }
+        $ses_core->execCmd("SUBTABLE RTEREF");
+        unless (grep /CONFIRM/, $ses_core->execCmd("add $db_trunk{'t15_sst'}{-acc} T OFRT $db_trunk{'t15_sst'}{-acc} ")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'add $db_trunk{'t15_sst'}{-acc} T OFRT $db_trunk{'t15_sst'}{-acc} ' ");
+        }else{
+            $ses_core->execCmd("Y");
+            $ses_core->execCmd("abort");
+        }
+        $ses_core->execCmd("quit all");
+        unless (grep /TABLE:.*HNPACONT/, $ses_core->execCmd("table HNPACONT")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table HNPACONT' ");
+        }
+        unless (grep /213/, $ses_core->execCmd("pos 212 Y 1023 0 \( 177\) \( 1\) \( 0\) \( 0\) \( 0\) 0 \$")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos 212 Y 1023 0 \( 177\) \( 1\) \( 0\) \( 0\) \( 0\) 0 \$' ");
+        }
+        $ses_core->execCmd("SUBTABLE HNPACODE");
+        unless (grep /CONFIRM/, $ses_core->execCmd("add $db_trunk{'t15_sst'}{-acc} $db_trunk{'t15_sst'}{-acc} FRTE $db_trunk{'t15_sst'}{-acc} ")) {
+            $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'add $db_trunk{'t15_sst'}{-acc} $db_trunk{'t15_sst'}{-acc} FRTE $db_trunk{'t15_sst'}{-acc} ' ");
+        }else{
+            $ses_core->execCmd("Y");
+            $ses_core->execCmd("abort");
+        }
+        unless (grep /$db_trunk{'t15_sst'}{-clli}/, $ses_core->execCmd("traver tr $db_trunk{'t15_pri_loop'}{-clli} $dialed_num b")) {
+        $logger->error(__PACKAGE__ . " $tcid: traver tr $db_trunk{'t15_pri_loop'}{-clli} $dialed_num b fail");
         print FH "STEP: translation line to SST - FAIL\n";
         $result = 0;
         goto CLEANUP;
@@ -1746,8 +1799,8 @@ sub tms1287012 { #Verifying verstat parameter to be sent properly from Local Lin
                 -detect => ['NONE'],
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -1758,7 +1811,17 @@ sub tms1287012 { #Verifying verstat parameter to be sent properly from Local Lin
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            last;
+        }
+	}
+    sleep(2);
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -1768,6 +1831,8 @@ sub tms1287012 { #Verifying verstat parameter to be sent properly from Local Lin
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);   
+    
     }
       
 ################################## Cleanup tms1287012 ##################################
@@ -1898,30 +1963,30 @@ sub tms1287013 { #Verifying verstat parameter to be sent properly from Local Lin
     &table_ofcvar_default();
     $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
 
-# Check Trunk status
-    my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
-        $idl_num = 0;
-        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
-        foreach (@output) {
-            if (/tk_idle .* (\d+)/) {
-                $idl_num = $1;
-                last;
-            }
-        }
-        unless ($idl_num) {
-            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
-            print FH "STEP: Check trunk $_ status - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: Check trunk $_ status- PASS\n";
-        }
-    }
-    unless ($flag) {
-        $result = 0;
-        goto CLEANUP;
-    }
+# # Check Trunk status
+#     my $idl_num;
+#     foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
+#         $idl_num = 0;
+#         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+#         foreach (@output) {
+#             if (/tk_idle .* (\d+)/) {
+#                 $idl_num = $1;
+#                 last;
+#             }
+#         }
+#         unless ($idl_num) {
+#             $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+#             print FH "STEP: Check trunk $_ status - FAIL\n";
+#             $flag = 0;
+#             last;
+#         } else {
+#             print FH "STEP: Check trunk $_ status- PASS\n";
+#         }
+#     }
+#     unless ($flag) {
+#         $result = 0;
+#         goto CLEANUP;
+#     }
 # Initialize Call
     %input = (
                 -cas_server => [@cas_server],
@@ -2000,8 +2065,8 @@ sub tms1287013 { #Verifying verstat parameter to be sent properly from Local Lin
                 -detect => ['NONE'],
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -2012,7 +2077,16 @@ sub tms1287013 { #Verifying verstat parameter to be sent properly from Local Lin
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-
+# Detect C rings after timeout of CFD
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            last;
+        }
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -2021,7 +2095,8 @@ sub tms1287013 { #Verifying verstat parameter to be sent properly from Local Lin
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','VERSTAT DATA\s+:\s+PASSED', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+   
     }
     
 ################################## Cleanup tms1287013 ##################################
@@ -2170,7 +2245,7 @@ sub tms1287014 { #Verifying verstat parameter to be sent properly from PRI to SI
     unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table OFRT")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table OFRT' ");
     }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos $db_trunk{'t15_pri'}{-acc}")) {
+    unless (grep /STRSHKN_ENABLED/, $ses_core->execCmd("pos $db_trunk{'t15_pri'}{-acc}")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos $db_trunk{'t15_pri'}{-acc}' ");
     }
     foreach ('cha','N','D',$db_trunk{'t15_pri'}{-clli},'3','775','n','$','$','y') {
@@ -2335,7 +2410,16 @@ sub tms1287014 { #Verifying verstat parameter to be sent properly from PRI to SI
     } else {
         print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
-    sleep(5);
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            last;
+        }
+	}
 
 # Stop CallTrak
     if ($calltrak_start) {
@@ -2498,7 +2582,7 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
 # config table LTDATA
     unless (grep /TABLE:.*LTDATA/, $ses_core->execCmd("table LTDATA")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table LTDATA' ");
@@ -2518,7 +2602,7 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
     unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table OFRT")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table OFRT' ");
     }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos $db_trunk{'t15_pri'}{-acc}")) {
+    unless (grep /STRSHKN_ENABLED/, $ses_core->execCmd("pos $db_trunk{'t15_pri'}{-acc}")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos $db_trunk{'t15_pri'}{-acc}' ");
     }
     foreach ('cha','N','D',$db_trunk{'t15_pri'}{-clli},'3','775','n','$','$','y') {
@@ -2539,7 +2623,7 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
     my $ofrt_config = 1;
 # Check Trunk status
     my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli}) {
+    foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
         $idl_num = 0;
         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
         foreach (@output) {
@@ -2636,11 +2720,11 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
-                -detect => ['RINGING'], #'RINGBACK','RINGING'
+                -detect => ['NONE'], #'RINGBACK','RINGING'
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -2651,7 +2735,16 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
     } else {
         print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
-    sleep(5);
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            last;
+        }
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -2660,7 +2753,7 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
         else {
             print FH "STEP: Stop calltrak - PASS\n";
         }
-        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','VERSTAT DATA\s+:\s+PASSED', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+B', @callTrakLogs);
     }
    
 ################################## Cleanup tms1287015 ##################################
@@ -3148,7 +3241,7 @@ sub tms1287017 { #Verifying verstat parameter to be sent properly from SIP_PBX t
     # check the result var to know the TC is passed or failed
     &Luan_checkResult($tcid, $result);
 }
-sub tms1287018 { #Callp service - 3WC join conference via SST trunk with Pphone line as originator
+sub tms1287018 { #Callp service - 3WC join conference via SST
     $logger->debug(__PACKAGE__ . " Inside test case tms1287018");
 
 ########################### Variables Declaration #############################
@@ -3510,6 +3603,361 @@ sub tms1287018 { #Callp service - 3WC join conference via SST trunk with Pphone 
     # check the result var to know the TC is passed or failed
     &Luan_checkResult($tcid, $result);
 }
+sub tms1287019 { #Callp service - CFU forward to SIP line via SST trunk  
+    $logger->debug(__PACKAGE__ . " Inside test case tms1287019");
+
+########################### Variables Declaration #############################
+    $tcid = "tms1287019";
+    my $execution_logs = $tcid.'_ExecutionLogs_'.$datestamp.'.txt';
+    my $result = 1;
+
+    open(FH,'>',$execution_logs) or die $!;
+    move($dir."/".$execution_logs,"/home/".$user_name."/ats_user/logs/SHAKEN19_SV");
+
+    my @list_dn = ($db_line{$tc_line{$tcid}[0]}{-dn}, $db_line{$tc_line{$tcid}[1]}{-dn}, $db_line{$tc_line{$tcid}[2]}{-dn});
+    my @list_line = ($db_line{$tc_line{$tcid}[0]}{-line}, $db_line{$tc_line{$tcid}[1]}{-line}, $db_line{$tc_line{$tcid}[2]}{-line});
+    my @list_region = ($db_line{$tc_line{$tcid}[0]}{-region}, $db_line{$tc_line{$tcid}[1]}{-region}, $db_line{$tc_line{$tcid}[2]}{-region});
+    my @list_len = ($db_line{$tc_line{$tcid}[0]}{-len}, $db_line{$tc_line{$tcid}[1]}{-len}, $db_line{$tc_line{$tcid}[2]}{-len});
+    my @list_line_info = ($db_line{$tc_line{$tcid}[0]}{-info}, $db_line{$tc_line{$tcid}[1]}{-info}, $db_line{$tc_line{$tcid}[2]}{-info});
+
+    my $initialize_done = 0;
+    my $logutil_start = 0;
+    my $calltrak_start = 0;
+    my $add_feature_lineB = 0;
+    my $add_feature_lineA = 0;
+    my $flag = 1;
+    my (@list_file_name, $dialed_num, @callTrakLogs );
+    
+################################# LOGIN #######################################
+    unless ($ses_core = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_CoreSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 - PASS\n";
+    }
+    unless($ses_glcas = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{ "glcas:1:ce0"}, -sessionlog => $tcid."_GLCASLog", - output_record_separator => "\n")){
+        $logger->error(__PACKAGE__ . " $tcid: Could not create GLCAS object for tms_alias => TESTBED{ ‘glcas:1:ce0’ }");
+        print FH "STEP: Login Server 53 for GLCAS - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login Server 53 for GLCAS - PASS\n";
+    }
+    unless ($ses_logutil = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_LogutilSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for Logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for Logutil - PASS\n";
+    }
+    unless ($ses_calltrak = SonusQA::ATSHELPER::newFromAlias(-tms_alias => $TESTBED{"c20:1:ce0"}, -sessionLog => $tcid."_calltrakSessionLog")) {
+        $logger->error(__PACKAGE__ . " $tcid: Could not create C20 object for tms_alias => $TESTBED{'c20:1:ce0'}" );
+        print FH "STEP: Login TMA15 for calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 for calltrak - PASS\n";
+    }
+
+    unless ($ses_core->loginCore(-username => [@{$core_account{-username}}[2..8]], -password => [@{$core_account{-password}}[2..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core - PASS\n";
+    }
+
+    unless ($ses_calltrak->loginCore(-username => [@{$core_account{-username}}[3..8]], -password => [@{$core_account{-password}}[3..8]])) {
+		$logger->error(__PACKAGE__ . " $tcid: Unable to access TMA15 Core");
+		print FH "STEP: Login TMA15 core for Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Login TMA15 core for Calltrak - PASS\n";
+    }
+
+############### Test Specific configuration & Test Tool Script Execution #################
+# Check line status
+    for (my $i = 0; $i <= $#list_dn; $i++){
+        %input = (
+                    -function => ['OUT','NEW'], 
+                    -lineDN => $list_dn[$i], 
+                    -lineType => '', 
+                    -len => '', 
+                    -lineInfo => $list_line_info[$i]
+                );
+        unless ($ses_core->resetLine(%input)) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] cannot reset");
+            print FH "STEP: Reset line $list_dn[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Reset line $list_dn[$i] - PASS\n";
+        }
+		
+        unless (grep /IDL/, $ses_core->coreLineGetStatus($list_dn[$i])) {
+            $logger->error(__PACKAGE__ . " $tcid: Line $list_dn[$i] is not IDL");
+            print FH "STEP: Check line $list_dn[$i] status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check line $list_dn[$i] status- PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+ 
+# Check Trunk status
+    my $idl_num;
+    foreach ($db_trunk{'t15_sst'}{-clli}) {
+        $idl_num = 0;
+        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+        foreach (@output) {
+            if (/tk_idle .* (\d+)/) {
+                $idl_num = $1;
+                last;
+            }
+        }
+        unless ($idl_num) {
+            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+            print FH "STEP: Check trunk $_ status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check trunk $_ status- PASS\n";
+        }
+    }
+    unless ($flag) {
+        $result = 0;
+        goto CLEANUP;
+    }
+# config table ofcvar
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
+   
+
+# Add CFU to line B
+    unless ($ses_core->callFeature(-featureName => "CFU N", -dialNumber => $list_dn[1], -deleteFeature => 'No')) {
+		$logger->error(__PACKAGE__ . " $tcid: Cannot add CFU for line $list_dn[1]");
+		print FH "STEP: add CFU for line $list_dn[1] - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: add CFU for line $list_dn[1] - PASS\n";
+    }
+    $add_feature_lineB = 1;
+
+    my $cfu_acc = $ses_core->getAccessCode(-table => 'IBNXLA', -dialNumber => $list_dn[0], -lastColumn => 'CFWP');
+    unless ($cfu_acc) {
+		$logger->error(__PACKAGE__ . " $tcid: Cannot get CFU access code for line $list_dn[0]");
+		print FH "STEP: get CFU access code for line $list_dn[0] - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: get CFU access code for line $list_dn[0] - PASS\n";
+    }
+# Initialize Call
+    %input = (
+                -cas_server => [@cas_server],
+                -list_port => [@list_line],
+                -tone_type => 0
+             );
+    unless($ses_glcas->initializeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot Initialize Call");
+		print FH "STEP: Initialize Call - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: Initialize Call - PASS\n";
+    }
+
+    for (my $i = 0; $i <= $#list_line; $i++){
+        unless ($ses_glcas->setRegionCAS(-line_port => $list_line[$i], -region_code => $list_region[$i], -wait_for_event_time => $wait_for_event_time)) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot set region for line $list_line[$i]");
+            print FH "STEP: set region for line $list_line[$i] - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: set region for line $list_line[$i] - PASS\n";
+        }
+    }
+    unless ($flag){
+        $result = 0;
+        goto CLEANUP;
+    }
+    $initialize_done = 1;
+
+# Start logutil
+    %input = (
+                -username => [@{$core_account{-username}}[6..9]], 
+                -password => [@{$core_account{-password}}[6..9]], 
+                -logutilType => ['SWERR', 'TRAP', 'AMAB'],
+             );
+    unless ($ses_logutil->startLogutil(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start logutil");
+        print FH "STEP: start logutil - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start logutil - PASS\n";
+    }
+    $logutil_start = 1;
+    
+
+###################### Call flow ###########################
+# start Calltrak 
+    %input = (-traceType => 'msgtrace', 
+              -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
+              -dialedNumber => [$list_dn[0],$list_dn[1]]); 
+    unless ($ses_calltrak->startCalltrak(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
+        print FH "STEP: start Calltrak - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: start Calltrak - PASS\n";
+    }
+    $calltrak_start = 1;
+# Activate CFU to line C
+    unless($ses_glcas->offhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . ": Cannot offhook line $list_line[1]");
+    }
+    my $dialed_num = '*' . $cfu_acc . $list_dn[2] . '#';
+    %input = (
+                -line_port => $list_line[1],
+                -dialed_number => $dialed_num,
+                -digit_on => 300,
+                -digit_off => 300,
+                -wait_for_event_time => $wait_for_event_time
+                ); 
+    unless($ses_glcas->sendDigitsWithDurationCAS(%input)) {
+        $logger->error(__PACKAGE__ . ": Cannot dial $dialed_num successfully");
+    }
+    unless($ses_glcas->onhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
+        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_line[0]");
+    }
+    unless (grep /CFU.*\sA\s/, $ses_core->execCmd("qdn $list_dn[1]")) {
+        $logger->error(__PACKAGE__ . " $tcid: Cannot activate CFU for line $list_dn[1]");
+        print FH "STEP: activate CFU for line $list_dn[1] - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: activate CFU for line $list_dn[1] - PASS\n";
+    }
+# Make call A to B  fw to C
+    $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
+    my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
+    $dialed_num = $trunk_access_code . $1;
+    %input = (
+                -lineA => $list_line[0],
+                -lineB => $list_line[2],
+                -dialed_number => $dialed_num,
+                -regionA => $list_region[0],
+                -regionB => $list_region[2],
+                -check_dial_tone => 'y',
+                -digit_on => 300,
+                -digit_off => 300,
+                -detect => ['NONE','NONE'],
+                -ring_on => [0],
+                -ring_off => [0],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
+                -flash => ''
+                );
+    unless ($ses_glcas->makeCall(%input)) {
+        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B via SST  fw to C");
+        print FH "STEP: A calls B via SST  fw to C  - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: A calls B via SST  fw to C - PASS\n";
+    }
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            last;
+        }
+	}
+
+    
+# Stop CallTrak
+    if ($calltrak_start) {
+        unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop calltrak ");
+        }
+        else {
+            print FH "STEP: Stop calltrak - PASS\n";
+        }
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);           
+        $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+    }
+   
+################################## Cleanup tms1287019 ##################################
+    CLEANUP:
+    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1287019 ##################################");
+
+    # Cleanup call
+    if ($initialize_done) {
+        foreach (@list_line){
+            unless($ses_glcas->onhookCAS(-line_port => $_, -wait_for_event_time => $wait_for_event_time)) {
+                $logger->error(__PACKAGE__ . ": Cannot onhook line $_");
+            }
+        }
+        unless($ses_glcas->cleanupCAS(-list_port => [@list_line])) {
+            $logger->error(__PACKAGE__ . ": Cannot cleanup GLCAS");
+            print FH "STEP: cleanup GLCAS - FAIL\n";
+        } else {
+            print FH "STEP: cleanup GLCAS - PASS\n";
+        }
+    }
+   # remove CFB from line B
+    if ($add_feature_lineB) {
+        unless ($ses_core->callFeature(-featureName => 'CFB', -dialNumber => $list_dn[1], -deleteFeature => 'Yes')) {
+            $logger->error(__PACKAGE__ . " $tcid: Remove CFB from line $list_dn[1]");
+            print FH "STEP: Remove CFB from line $list_dn[1] - FAIL\n";
+        } else {
+            print FH "STEP: Remove CFB from line $list_dn[1] - PASS\n";
+        }
+    }
+    
+    # Stop Logutil
+    if ($logutil_start) {
+        unless ($ses_logutil->stopLogutil()) {
+            $logger->error(__PACKAGE__ . " $tcid: Cannot stop logutil ");
+        }
+        @output = $ses_logutil->execCmd("open trap");
+        unless (grep /Log empty/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Trap is generated on core ");
+            $result = 0;
+            print FH "STEP: Check Trap - FAIL\n";
+        } else {
+            print FH "STEP: Check trap - PASS\n";
+        }
+        @output = $ses_logutil->execCmd("open swerr");
+        unless ((grep /Log empty/, @output) or grep /MTCMAINP|SYSAUDP|USRSYSMG|CALLP|TDLDPR|CXNADDRV|TPCIPPR|NBDAUDIT|MTCAUXP|TPCIPPR/, @output) {
+            $logger->error(__PACKAGE__ . " $tcid: Swerr is generated on core ");
+            $result = 0;
+            print FH "STEP: Check SWERR - FAIL\n";
+        } else {
+            print FH "STEP: Check SWERR - PASS\n";
+        }
+    }
+
+    close(FH);
+    &Luan_cleanup();
+    # check the result var to know the TC is passed or failed
+    &Luan_checkResult($tcid, $result);
+}
 sub tms1287020 { #Callp service - CXR tranfer to SIP line via SST trunk 
     $logger->debug(__PACKAGE__ . " Inside test case tms1287020");
 
@@ -3589,7 +4037,7 @@ sub tms1287020 { #Callp service - CXR tranfer to SIP line via SST trunk
 ############### Test Specific configuration & Test Tool Script Execution #################
 # config table ofcvar
     &table_ofcvar_default();
-    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
 
 # Check line status
     for (my $i = 0; $i <= $#list_dn; $i++){
@@ -3790,16 +4238,17 @@ sub tms1287020 { #Callp service - CXR tranfer to SIP line via SST trunk
     } else {
         print FH "STEP: Onhook line B - PASS\n";
     }
-    sleep(2);
-# Offhook C
-    unless($ses_glcas->offhookCAS(-line_port => $list_line[2], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot offhook line $list_dn[2]");
-        print FH "STEP: Offhook line C - FAIL\n";
-        $result = 0;
-    } else {
-        print FH "STEP: Offhook line C - PASS\n";
-    }
-    sleep(2);
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            last;
+        }
+	}    
+    sleep(5);
 
 # Stop CallTrak
     if ($calltrak_start) {
@@ -3810,11 +4259,13 @@ sub tms1287020 { #Callp service - CXR tranfer to SIP line via SST trunk
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);   
+    
     }
   
-################################## Cleanup tms1287018 ##################################
+################################## Cleanup tms1287020 ##################################
     CLEANUP:
-    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1287018 ##################################");
+    $logger->debug(__PACKAGE__ . " $tcid: ################################ Cleanup tms1287020 ##################################");
 
     # Cleanup call
     if ($initialize_done) {
@@ -4004,55 +4455,18 @@ sub tms1287021 { #Callp service - Callp service - CFB forward to SIP line via SS
         goto CLEANUP;
     }
 # config table ofcvar
-    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
-    }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
-    }
-    foreach ('cha','y y','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
-    }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
-    }
-    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
-    }
-   
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
+
 
 # Add CFB to line B
     unless ($ses_core->callFeature(-featureName => "CFB N $list_dn[2]", -dialNumber => $list_dn[1], -deleteFeature => 'No')) {
-		$logger->error(__PACKAGE__ . " $tcid: Cannot add CFD for line $list_dn[1]");
-		print FH "STEP: add CFD for line $list_dn[1] - FAIL\n";
+		$logger->error(__PACKAGE__ . " $tcid: Cannot add CFB for line $list_dn[1]");
+		print FH "STEP: add CFB for line $list_dn[1] - FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
-        print FH "STEP: add CFD for line $list_dn[1] - PASS\n";
+        print FH "STEP: add CFB for line $list_dn[1] - PASS\n";
     }
     $add_feature_lineB = 1;
 # Initialize Call
@@ -4138,11 +4552,11 @@ sub tms1287021 { #Callp service - Callp service - CFB forward to SIP line via SS
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
-                -detect => ['RINGBACK','RINGING'],
+                -detect => ['NONE','NONE'],
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -4153,7 +4567,17 @@ sub tms1287021 { #Callp service - Callp service - CFB forward to SIP line via SS
     } else {
         print FH "STEP: A calls B via SST  fw to C - PASS\n";
     }
-    
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            last;
+        }
+	}    
+    sleep(5);
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -4163,6 +4587,8 @@ sub tms1287021 { #Callp service - Callp service - CFB forward to SIP line via SS
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);   
+
     }
    
 ################################## Cleanup tms1287021 ##################################
@@ -4356,46 +4782,9 @@ sub tms1287022 { #Callp service - Callp service - CFD forward to SIP line via SS
         goto CLEANUP;
     }
 # config table ofcvar
-    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
-    }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
-    }
-    foreach ('cha','y y','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
-    }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
-    }
-    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
-    }
-   
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
+
 
 # Add CFD to line B
     unless ($ses_core->callFeature(-featureName => "CFD N $list_dn[2]", -dialNumber => $list_dn[1], -deleteFeature => 'No')) {
@@ -4492,10 +4881,10 @@ sub tms1287022 { #Callp service - Callp service - CFD forward to SIP line via SS
     $dialed_num = $trunk_access_code . $1;
     %input = (
                 -lineA => $list_line[0],
-                -lineB => $list_line[2],
+                -lineB => $list_line[1],
                 -dialed_number => $dialed_num,
                 -regionA => $list_region[0],
-                -regionB => $list_region[2],
+                -regionB => $list_region[1],
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
@@ -4515,49 +4904,15 @@ sub tms1287022 { #Callp service - Callp service - CFD forward to SIP line via SS
         print FH "STEP: A calls B via SST ;B does't answers - PASS\n";
     }
 # Detect C rings after timeout of CFD
-	
-	%input = (
-                -line_port => $list_line[2],
-                -ring_count => 1,
-                -ring_on => 0,
-                -ring_off => 0,
-                -cas_timeout => 50000,
-                -wait_for_event_time => $wait_for_event_time,
-                );
-    
 	for (my $i = 0; $i <= 10; $i++){
-		unless ($ses_glcas->detectRingingSignalCAS(%input)) {
-			print FH "Waiting for line C ringing \n";
-			sleep (2);
-		} else {
-			print FH "STEP: Check line C ringing - PASSED\n";
-			last;
-		}
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            last;
+        }
 	}
-# C off-hooks
-	unless($ses_glcas->offhookCAS(-line_port => $list_line[2], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot offhook line $list_line[2]");
-        print FH "STEP: Offhook line C - FAILED\n";
-        $result = 0;
-		goto CLEANUP;
-    } else {
-        print FH "STEP: Offhook line C - PASSED\n";
-    }
-# Verify speech path between A and C
-	%input = (
-                -list_port => [$list_line[2],$list_line[0]], 
-                -checking_type => ['TESTTONE'], 
-                -tone_duration => 1000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed to verify speech path between C and A");
-        print FH "STEP: Verify speech path between C and A - FAILED\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Verify speech path between C and A - PASSED\n";
-    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -4567,6 +4922,8 @@ sub tms1287022 { #Callp service - Callp service - CFD forward to SIP line via SS
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);   
+
     }
    
 ################################## Cleanup tms1287022 ##################################
@@ -4758,46 +5115,8 @@ sub tms1287023 { #Callp service - SCL call to SIP line via SST trunk
         goto CLEANUP;
     }
 # config table ofcvar
-    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
-    }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
-    }
-    foreach ('cha','y y','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
-    }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
-    }
-    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
-    }
-   
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
 # Get access code SPDC/SCPL for line A 
 	my $spdc_acc = $ses_core->getAccessCode(-table => 'IBNXLA', -dialNumber => $list_dn[0], -lastColumn => 'SPDC');
     unless ($spdc_acc) {
@@ -4986,7 +5305,7 @@ sub tms1287023 { #Callp service - SCL call to SIP line via SST trunk
     }
     sleep(3);
 
-# A dials SPDC code + NN and check speech path between line A and B
+# A dials SPDC code + NN 
     $dialed_num = "\*$spdc_acc" . '11';
     %input = (
                 -lineA => $list_line[0],
@@ -4997,11 +5316,11 @@ sub tms1287023 { #Callp service - SCL call to SIP line via SST trunk
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
-                -detect => ['RINGBACK','RINGING'],
+                -detect => ['NONE','NONE'],
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -5012,6 +5331,16 @@ sub tms1287023 { #Callp service - SCL call to SIP line via SST trunk
     } else {
         print FH "STEP: A dials SPDC code + NN and check speech path between line A and B - PASS\n";
     }
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            last;
+        }
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -5021,6 +5350,8 @@ sub tms1287023 { #Callp service - SCL call to SIP line via SST trunk
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);   
+
     }
   
 ################################## Cleanup tms1287023 ##################################
@@ -5213,46 +5544,8 @@ sub tms1287024 { #Callp service - SCS call to SIP line via SST trunk
         goto CLEANUP;
     }
 # config table ofcvar
-    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
-    }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
-    }
-    foreach ('cha','y y','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
-    }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
-    }
-    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
-    }
-   
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
 # Get access code SPDC/SCPS for line A 
 	my $spdc_acc = $ses_core->getAccessCode(-table => 'IBNXLA', -dialNumber => $list_dn[0], -lastColumn => 'SPDC');
     unless ($spdc_acc) {
@@ -5453,11 +5746,11 @@ sub tms1287024 { #Callp service - SCS call to SIP line via SST trunk
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
-                -detect => ['RINGBACK','RINGING'],
+                -detect => ['NONE','NONE'],
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -5468,6 +5761,16 @@ sub tms1287024 { #Callp service - SCS call to SIP line via SST trunk
     } else {
         print FH "STEP: A dials SPDC code + N and check speech path between line A and B - PASS\n";
     }
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            last;
+        }
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -5477,6 +5780,7 @@ sub tms1287024 { #Callp service - SCS call to SIP line via SST trunk
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);       
     }
   
 ################################## Cleanup tms1287024 ##################################
@@ -5675,7 +5979,7 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
     unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
     }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
+    unless (grep /STRSHKN_ENABLED/, $ses_core->execCmd("pos strshkn_enabled")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
     }
     foreach ('cha','y y','y') {
@@ -5693,7 +5997,7 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
     } else {
         print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
     }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
+    unless (grep /STRSHKN_ORIGID/, $ses_core->execCmd("pos strshkn_origID")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
     }
     foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
@@ -5843,7 +6147,7 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
     } else {
         print FH "STEP: B dials acc_code CHD - PASS\n";
     }
-# B calls C, C rings and answers
+# B calls C
 	# B dials DN (C)
     $dialed_num = $list_dn[2] =~ /\d{3}(\d+)/;
     $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
@@ -5864,51 +6168,16 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
     } else {
         print FH "STEP: B dials C - PASS\n";
     }
-	
-	# Check line C rings 
-	%input = (
-                -line_port => $list_line[2],
-                -ring_count => 1,
-                -ring_on => 0,
-                -ring_off => 0,
-                -cas_timeout => 50000,
-                -wait_for_event_time => $wait_for_event_time,
-                );
-    unless ($ses_glcas->detectRingingSignalCAS(%input)) {
-        $logger->error(__PACKAGE__ . ".$tcid: Line C does not ring");
-        print FH "STEP: Check line C ringing - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Check line C ringing - PASS\n";
-    }
-	
-	# Off hook line C 
-	
-	unless($ses_glcas->offhookCAS(-line_port => $list_line[2], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot offhook line C $list_line[2]");
-        print FH "STEP: offhook line C $list_line[2] - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: offhook line C $list_line[2] - PASS\n";
-    }
-	
-    # Verify speech path between B and C
-	%input = (
-                -list_port => [$list_line[2],$list_line[1]], 
-                -checking_type => ['TESTTONE'], 
-                -tone_duration => 1000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed to verify speech path between C and B");
-        print FH "STEP: Verify speech path between C and B - FAILED\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Verify speech path between C and B - PASSED\n";
-    }
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            last;
+        }
+	}
 # Onhook B
     unless($ses_glcas->onhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . ": Cannot onhook line $list_line[1]");
@@ -5917,16 +6186,6 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
         goto CLEANUP;
     } else {
         print FH "STEP: Onhook line B - PASS\n";
-    }
-	
-# Onhook C
-    unless($ses_glcas->onhookCAS(-line_port => $list_line[2], -wait_for_event_time => $wait_for_event_time)) {
-        $logger->error(__PACKAGE__ . ": Cannot onhook line $list_line[2]");
-        print FH "STEP: Onhook line C - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: Onhook line C - PASS\n";
     }
 	
 # Check line B re-ringing
@@ -5964,6 +6223,7 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
     }
    
 ################################## Cleanup tms1287025 ##################################
@@ -6160,7 +6420,7 @@ sub tms1287026 { #Callp service - CWT verify call waiting from SIP line via SST 
     unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
     }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
+    unless (grep /STRSHKN_ENABLED/, $ses_core->execCmd("pos strshkn_enabled")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
     }
     foreach ('cha','y y','y') {
@@ -6178,7 +6438,7 @@ sub tms1287026 { #Callp service - CWT verify call waiting from SIP line via SST 
     } else {
         print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
     }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
+    unless (grep /STRSHKN_ORIGID/, $ses_core->execCmd("pos strshkn_origID")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
     }
     foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
@@ -6612,7 +6872,7 @@ sub tms1287027 { #Callp service - Verify DNH feature works fine with via SST tru
     unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
     }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
+    unless (grep /STRSHKN_ENABLED/, $ses_core->execCmd("pos strshkn_enabled")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
     }
     foreach ('cha','y y','y') {
@@ -6630,7 +6890,7 @@ sub tms1287027 { #Callp service - Verify DNH feature works fine with via SST tru
     } else {
         print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
     }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
+    unless (grep /STRSHKN_ORIGID/, $ses_core->execCmd("pos strshkn_origID")) {
         $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
     }
     foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
@@ -7108,11 +7368,11 @@ sub tms1287028 { #Callp service - 1FR line make a basic call via SST trunk
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
-                -detect => ['RINGBACK','RINGING'],
+                -detect => ['NONE','NONE'],
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
@@ -7123,7 +7383,16 @@ sub tms1287028 { #Callp service - 1FR line make a basic call via SST trunk
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-	
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            last;
+        }
+	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -7133,6 +7402,8 @@ sub tms1287028 { #Callp service - 1FR line make a basic call via SST trunk
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);  
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+
     }
   
 ################################## Cleanup tms1287028 ##################################
@@ -7317,46 +7588,9 @@ sub tms1287029 { #Callp service - MLH make a basic call via SST trunk
         goto CLEANUP;
     }
 # config table ofcvar
-    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
-    }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
-    }
-    foreach ('cha','y y','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
-    }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
-    }
-    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
-    }
-   
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
+
 
 # Add MLH group: A is pilot, B is member
 	# Out A, B
@@ -7557,6 +7791,8 @@ sub tms1287029 { #Callp service - MLH make a basic call via SST trunk
 	
     # remove MLH
     if ($mlh_added) {
+        $ses_core->execCmd("quit all");
+        $ses_core->execCmd("servord");
         if (grep /INCONSISTENT DATA|ERROR/, $ses_core->execCmd("del \$ mlh $list_len[1] \$ y y")) {
             unless($ses_core->execCmd("abort")) {
                 $logger->error(__PACKAGE__ . ".$tcid: Cannot command abort after DEL fail");
@@ -7761,46 +7997,9 @@ sub tms1287030 { #Callp service - MADN (SCA) make a basic call via SST trunk
         goto CLEANUP;
     }
 # config table ofcvar
-    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
-    }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
-    }
-    foreach ('cha','y y','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
-    }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
-    }
-    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
-    }
-   
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS FAIL FAIL");
+
 
 # Add MDN to line A as primary, Line B as member
     unless($ses_core->execCmd("servord")) {
@@ -8329,46 +8528,9 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
         goto CLEANUP;
     }
 # config table ofcvar
-    unless (grep /TABLE:.*OFCVAR/, $ses_core->execCmd("table ofcvar")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'table ofcvar' ");
-    }
-    unless (grep /strshkn_enabled/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_enabled' ");
-    }
-    foreach ('cha','y y','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /Y Y/, $ses_core->execCmd("pos strshkn_enabled")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_enabled");
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change PARMVAL y y of strshkn_enabled - PASS\n";
-    }
-    unless (grep /strshkn_origID/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot execute command 'pos strshkn_origID' ");
-    }
-    foreach ('cha','ADMINENTERED KINGOFKINGOFCVAR','y') {
-        unless ($ses_core->execCmd($_)) {
-            $logger->error(__PACKAGE__ . " $tcid: cannot execute command '$_' ");
-            last;
-        }
-    }
-    $ses_core->execCmd("abort");
-    unless (grep /KINGOFKINGOFCVAR/, $ses_core->execCmd("pos strshkn_origID")) {
-        $logger->error(__PACKAGE__ . " $tcid: cannot change PARMVAL of strshkn_origID");
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: change STRSHKN_ORIGID ADMINENTERED KINGOFKINGOFCVAR - PASS\n";
-    }
-   
+    &table_ofcvar_default();
+    $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS FAIL");
+
 
 # Add simring for B and C
     $ses_core->execCmd("quit all");
@@ -8446,7 +8608,7 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
               -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
-              -dialedNumber => [$list_dn[0],$list_dn[1]]); 
+              -dialedNumber => [$list_dn[0],$list_dn[2]]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
         print FH "STEP: start Calltrak - FAIL\n";
@@ -8456,9 +8618,7 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
         print FH "STEP: start Calltrak - PASS\n";
     }
     $calltrak_start = 1;
-
-
-# A calls B and check speech path C&A 
+# A calls B and C ring
     $dialed_num = $list_dn[1] =~ /\d{3}(\d+)/;
     my $trunk_access_code = $db_trunk{'t15_sst'}{-acc};
     $dialed_num = $trunk_access_code . $1;
@@ -8472,22 +8632,31 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
                 -check_dial_tone => 'y',
                 -digit_on => 300,
                 -digit_off => 300,
-                -detect => ['DELAY 2','RINGING'],
+                -detect => ['NONE','NONE'],
                 -ring_on => [0],
                 -ring_off => [0],
-                -on_off_hook => ['offB'],
-                -send_receive => ['TESTTONE 1000'],
+                -on_off_hook => ['NONE'],
+                -send_receive => ['NONE'],
                 -flash => ''
                 );
     unless ($ses_glcas->makeCall(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B and check speech path C with A via SST");
-        print FH "STEP: A calls B and A&C 2way speech path via SST - FAIL\n";
+        $logger->error(__PACKAGE__ . " $tcid: Failed at A calls B ");
+        print FH "STEP: A calls B  - FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
-        print FH "STEP: A calls B and C&A 2way speech path via SST - PASS\n";
+        print FH "STEP: A calls B  - PASS\n";
     }
-
+# Detect Sip Line Ring
+	for (my $i = 0; $i <= 10; $i++){
+        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+            sleep (2);
+        } else {
+            print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            last;
+        }
+	}
 
 # Stop CallTrak
     if ($calltrak_start) {
@@ -8498,6 +8667,8 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
             print FH "STEP: Stop calltrak - PASS\n";
         }
         $result = &check_log('DATA CHARS\s+:\s+KINGOFKINGOFCVAR','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+        $result = &check_log('VERSTAT DATA\s+:\s+PASSED','STRSHKN_ATTESTATION\s+:\s+A', @callTrakLogs);
+
     }
    
 ################################## Cleanup tms1287031 ##################################
