@@ -259,21 +259,6 @@ sub Luan_cleanup {
     return 1;
 }
 
-# sub Luan_checkResult {
-#     my ($tcid, $result, $execution_logs) = (@_);
-#     my $subname = "Luan_checkResult";
-#     $logger->debug(__PACKAGE__ . ".$tcid: Test result : $result");
-#     if ($result) { 
-#         $logger->debug(__PACKAGE__ . ".$tcid  Test case passed ");
-#             SonusQA::ATSHELPER::printPassTest($tcid);
-#             return (1, $execution_logs);
-#     } else {
-#         $logger->debug(__PACKAGE__ . ".$tcid  Test case failed ");
-#             SonusQA::ATSHELPER::printFailTest($tcid);
-#             return (0, $execution_logs);
-#     }
-# }
-
 sub Luan_checkResult {
     my ($tcid, $result) = (@_);
     my $subname = "Luan_checkResult";
@@ -502,7 +487,6 @@ sub runTests {
         return 0;
     }
     $logger->debug(__PACKAGE__ . " ======: Opened Harness");  
-
     my @tests_to_run;
 
     # If an array is passed in use that. If not run every test.
@@ -512,54 +496,10 @@ sub runTests {
     else {
         @tests_to_run = @TESTCASES;
     }
-    #Login to get token
-    my $baseUrl = "http://10.1.0.75:3000";
-    my %args = (-baseUrl => $baseUrl, -username => 'ntluan2', -password => '12345678a@A');
-    unless($token = (SonusQA::HARNESS::login(%args))){
-        $logger->error(__PACKAGE__ . ": Failed to Login Analytic page");
-        return 0;
-    }
-	$logger->debug(__PACKAGE__ . ": token ===  : $token");
 
-	# Add testsuite 
-	%args = (-token => $token, -baseUrl => $baseUrl, -projectId => $projectId, -source => "QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19_SV", 
-				-testsuiteName => 'SHAKEN19_SV', -executionDate => $executionDate, -totalTCs => scalar @tests_to_run);
-
-	unless($testsuiteId = (SonusQA::HARNESS::addTestsuite(%args))) {
-		$logger->error(__PACKAGE__ . ": Failed to Add new testsuite 'SHAKEN19_SV'");
-        return 0;
-	}   
-	my %testcaseInfo = (-token => $token,-baseUrl => $baseUrl, -testsuiteId => $testsuiteId);
     $harness->{SUBROUTINE}= 1;    
-    $harness->runTestsinSuite( \@tests_to_run, \%testcaseInfo);
+    $harness->runTestsinSuite( @tests_to_run );
 }
-
-# sub runTests {
-#     unless ( &configured ) {
-#         $logger->error(__PACKAGE__ . ": Could not configure for test suite ".__PACKAGE__); 
-#         return 0;
-#     }
-
-#     $logger->debug(__PACKAGE__ . " ======: before Opening Harness");
-#     my $harness;
-#     unless($harness = SonusQA::HARNESS->new( -suite => __PACKAGE__, -release => "$TESTSUITE->{TESTED_RELEASE}", -variant => $TESTSUITE->{TESTED_VARIANT}, -build => $TESTSUITE->{BUILD_VERSION}, -path => "ats_repos/test/setup/work")){ # Use this for real SBX Hardware.
-#         $logger->error(__PACKAGE__ . ": Could not create harness object");
-#         return 0;
-#     }
-#     $logger->debug(__PACKAGE__ . " ======: Opened Harness");  
-#     my @tests_to_run;
-
-#     # If an array is passed in use that. If not run every test.
-#     if ( @_ ) {
-#         @tests_to_run = @_;
-#     }
-#     else {
-#         @tests_to_run = @TESTCASES;
-#     }
-
-#     $harness->{SUBROUTINE}= 1;    
-#     $harness->runTestsinSuite( @tests_to_run );
-# }
 
 ##################################################################################
 # +------------------------------------------------------------------------------+
