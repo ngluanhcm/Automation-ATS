@@ -152,13 +152,13 @@ our %db_line = (
    
 our %tc_line = ('TC0' => ['pbx','sip_1','gr303_1'],
                 'tms1287010' => ['sip_1','sip_2'],
-                'tms1287011' => ['sip_2','sip_1'],
+                'tms1287011' => ['sip_1','sip_2'],
                 'tms1287012' => ['gr303_1','sip_2'],
                 'tms1287013' => ['gr303_1','sip_2'],
                 'tms1287014' => ['gr303_1','sip_2'],
                 'tms1287015' => ['gr303_1','sip_2'],
                 'tms1287016' => ['sip_2','sip_1'],
-                'tms1287017' => ['sip_2','sip_1'],
+                'tms1287017' => ['sip_1','sip_2'],
                 'tms1287018' => ['gr303_1','gr303_2','sip_1'],
                 'tms1287019' => ['gr303_1','gr303_2','sip_2'],
                 'tms1287020' => ['gr303_1','gr303_2','sip_2'],
@@ -449,36 +449,36 @@ sub ACallBViaSSTBySipp{
 ##################################################################################
 
 our @TESTCASES = (
-                    "TC0", #set up lab
-                    "tms1287009",	#After restart warm, checking the OFCVAR Options
-                    "tms1287010",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
-                    "tms1287011",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
-                    "tms1287012",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
-                    "tms1287013",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
-                    "tms1287014",	#Verifying verstat parameter to be sent properly from PRI to SIP Line
-                    "tms1287015",	#FVerifying verstat parameter to be sent properly from PRI to SIP_PBX
-                    "tms1287016",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
-                    "tms1287017",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
-                    "tms1287018",	#Callp service - 3WC join conference via SST trunk 
-                    "tms1287019",	#Callp service - CFU forward to SIP line via SST trunk
-                    "tms1287020",	#Callp service - CXR tranfer to SIP line via SST trunk
-                    "tms1287021",	#Callp service - CFB forward to SIP line via SST trunk
-                    "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
-                    "tms1287023",	#Callp service - SCL call to SIP line via SST trunk
-                    "tms1287024",	#Callp service - SCS call to SIP line via SST trunk
+                    # "TC0", #set up lab
+                    # "tms1287009",	#After restart warm, checking the OFCVAR Options
+                    # "tms1287010",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
+                    # "tms1287011",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
+                    # "tms1287012",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
+                    # "tms1287013",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
+                    # "tms1287014",	#Verifying verstat parameter to be sent properly from PRI to SIP Line
+                    # "tms1287015",	#FVerifying verstat parameter to be sent properly from PRI to SIP_PBX
+                    # "tms1287016",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
+                    # "tms1287017",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
+                    # "tms1287018",	#Callp service - 3WC join conference via SST trunk 
+                    # "tms1287019",	#Callp service - CFU forward to SIP line via SST trunk
+                    # "tms1287020",	#Callp service - CXR tranfer to SIP line via SST trunk
+                    # "tms1287021",	#Callp service - CFB forward to SIP line via SST trunk
+                    # "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
+                    # "tms1287023",	#Callp service - SCL call to SIP line via SST trunk
+                    # "tms1287024",	#Callp service - SCS call to SIP line via SST trunk
                     "tms1287025",	#Callp service - CHD hold a call and make a new call to SIP line via SST trunk
-                    "tms1287026",	#Callp service - CWT verify call waiting from SIP line via SST trunk
-                    "tms1287027",	#Callp service - Verify DNH feature works fine with via SST trunk
-                    "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
-                    "tms1287029",	#Callp service - MLH make a basic call via SST trunk
-                    "tms1287030",	#Callp service - MADN (SCA) make a basic call via SST trunk
+                    # "tms1287026",	#Callp service - CWT verify call waiting from SIP line via SST trunk
+                    # "tms1287027",	#Callp service - Verify DNH feature works fine with via SST trunk
+                    # "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
+                    # "tms1287029",	#Callp service - MLH make a basic call via SST trunk
+                    # "tms1287030",	#Callp service - MADN (SCA) make a basic call via SST trunk
                     "tms1287031",	#Callp service - Simring make a call via SST trunk
-                    "tms1287032",	#Callp service - SDN make a call via SST trunk
-                    "tms1287033",	#OM_Verify Display oms : STRSHKN1 is support 
-                    "tms1287034",	#OM_Verify Display oms : STRSHKN2 is support 
-                    "tms1287035",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
-                    "tms1287036",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
-                    "tms1287037",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
+                    # "tms1287032",	#Callp service - SDN make a call via SST trunk
+                    # "tms1287033",	#OM_Verify Display oms : STRSHKN1 is support 
+                    # "tms1287034",	#OM_Verify Display oms : STRSHKN2 is support 
+                    # "tms1287035",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
+                    # "tms1287036",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
+                    # "tms1287037",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
                 );
 
 ############################### Run Test #####################################
@@ -2621,30 +2621,30 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
         print FH "STEP: change PRFXDIGS 775 of G6VZSTSPRINT2W - PASS\n";
     }
     my $ofrt_config = 1;
-# Check Trunk status
-    my $idl_num;
-    foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
-        $idl_num = 0;
-        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
-        foreach (@output) {
-            if (/tk_idle .* (\d+)/) {
-                $idl_num = $1;
-                last;
-            }
-        }
-        unless ($idl_num) {
-            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
-            print FH "STEP: Check trunk $_ status - FAIL\n";
-            $flag = 0;
-            last;
-        } else {
-            print FH "STEP: Check trunk $_ status- PASS\n";
-        }
-    }
-    unless ($flag) {
-        $result = 0;
-        goto CLEANUP;
-    }
+# # Check Trunk status
+#     my $idl_num;
+#     foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
+#         $idl_num = 0;
+#         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+#         foreach (@output) {
+#             if (/tk_idle .* (\d+)/) {
+#                 $idl_num = $1;
+#                 last;
+#             }
+#         }
+#         unless ($idl_num) {
+#             $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+#             print FH "STEP: Check trunk $_ status - FAIL\n";
+#             $flag = 0;
+#             last;
+#         } else {
+#             print FH "STEP: Check trunk $_ status- PASS\n";
+#         }
+#     }
+#     unless ($flag) {
+#         $result = 0;
+#         goto CLEANUP;
+#     }
 # Initialize Call
     %input = (
                 -cas_server => [@cas_server],
@@ -6187,7 +6187,7 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
     } else {
         print FH "STEP: Onhook line B - PASS\n";
     }
-	
+    sleep(5);
 # Check line B re-ringing
 	%input = (
                 -line_port => $list_line[1],
