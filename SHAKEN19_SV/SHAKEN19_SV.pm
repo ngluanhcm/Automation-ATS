@@ -102,7 +102,7 @@ our $SIPp_folder_file = "/home/$ENV{ USER }/ats_repos/lib/perl/QATEST/C20_EO/Lua
 our $SIPp_A;
 our $soapui;
 our $SIPp_A_cmd;
- 
+
 # Line Info
 our %db_line = (
                 'gr303_1' => {
@@ -145,6 +145,13 @@ our %db_line = (
                             -dn => 2124409578,
                             -region => 'US',
                             -len => 'SL10   00 0 00 78',
+                            -info => 'IBN AUTO_GRP 0 0 NILLATA 0 ',
+                            },
+                'sip_3' => {#sip_2
+                            -line => 41,
+                            -dn => 2124409576,
+                            -region => 'US',
+                            -len => 'SL10   00 0 00 76',
                             -info => 'IBN AUTO_GRP 0 0 NILLATA 0 ',
                             },
 
@@ -449,83 +456,39 @@ sub ACallBViaSSTBySipp{
 ##################################################################################
 
 our @TESTCASES = (
-                    # "TC0", #set up lab
-                    # "tms1287009",	#After restart warm, checking the OFCVAR Options
-                    # "tms1287010",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
-                    # "tms1287011",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
-                    # "tms1287012",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
-                    # "tms1287013",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
-                    # "tms1287014",	#Verifying verstat parameter to be sent properly from PRI to SIP Line
-                    # "tms1287015",	#FVerifying verstat parameter to be sent properly from PRI to SIP_PBX
-                    # "tms1287016",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
-                    # "tms1287017",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
-                    # "tms1287018",	#Callp service - 3WC join conference via SST trunk 
-                    # "tms1287019",	#Callp service - CFU forward to SIP line via SST trunk
-                    # "tms1287020",	#Callp service - CXR tranfer to SIP line via SST trunk
-                    # "tms1287021",	#Callp service - CFB forward to SIP line via SST trunk
-                    # "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
-                    # "tms1287023",	#Callp service - SCL call to SIP line via SST trunk
-                    # "tms1287024",	#Callp service - SCS call to SIP line via SST trunk
+                    "TC0", #set up lab
+                    "tms1287009",	#After restart warm, checking the OFCVAR Options
+                    "tms1287010",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP Line
+                    "tms1287011",	#Verifying verstat parameter to be sent properly from Incoming SIP Trunk to SIP_PBX
+                    "tms1287012",	#Verifying verstat parameter to be sent properly from Local Line to SIP Line
+                    "tms1287013",	#Verifying verstat parameter to be sent properly from Local Line to SIP_PBX
+                    "tms1287014",	#Verifying verstat parameter to be sent properly from PRI to SIP Line
+                    "tms1287015",	#FVerifying verstat parameter to be sent properly from PRI to SIP_PBX
+                    "tms1287016",	#Verifying verstat parameter to be sent properly from SIP-PBX to SIP Line
+                    "tms1287017",	#Verifying verstat parameter to be sent properly from SIP_PBX to SIP_PBX
+                    "tms1287018",	#Callp service - 3WC join conference via SST trunk 
+                    "tms1287019",	#Callp service - CFU forward to SIP line via SST trunk
+                    "tms1287020",	#Callp service - CXR tranfer to SIP line via SST trunk
+                    "tms1287021",	#Callp service - CFB forward to SIP line via SST trunk
+                    "tms1287022",	#Callp service - CFD forward to SIP line via SST trunk
+                    "tms1287023",	#Callp service - SCL call to SIP line via SST trunk
+                    "tms1287024",	#Callp service - SCS call to SIP line via SST trunk
                     "tms1287025",	#Callp service - CHD hold a call and make a new call to SIP line via SST trunk
-                    # "tms1287026",	#Callp service - CWT verify call waiting from SIP line via SST trunk
-                    # "tms1287027",	#Callp service - Verify DNH feature works fine with via SST trunk
-                    # "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
-                    # "tms1287029",	#Callp service - MLH make a basic call via SST trunk
-                    # "tms1287030",	#Callp service - MADN (SCA) make a basic call via SST trunk
+                    "tms1287026",	#Callp service - CWT verify call waiting from SIP line via SST trunk
+                    "tms1287027",	#Callp service - Verify DNH feature works fine with via SST trunk
+                    "tms1287028",	#Callp service - 1FR line make a basic call via SST trunk
+                    "tms1287029",	#Callp service - MLH make a basic call via SST trunk
+                    "tms1287030",	#Callp service - MADN (SCA) make a basic call via SST trunk
                     "tms1287031",	#Callp service - Simring make a call via SST trunk
-                    # "tms1287032",	#Callp service - SDN make a call via SST trunk
-                    # "tms1287033",	#OM_Verify Display oms : STRSHKN1 is support 
-                    # "tms1287034",	#OM_Verify Display oms : STRSHKN2 is support 
-                    # "tms1287035",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
-                    # "tms1287036",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
-                    # "tms1287037",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
+                    "tms1287032",	#Callp service - SDN make a call via SST trunk
+                    "tms1287033",	#OM_Verify Display oms : STRSHKN1 is support 
+                    "tms1287034",	#OM_Verify Display oms : STRSHKN2 is support 
+                    "tms1287035",	#Checking StrShkn Verstat OMs to be pegged properly for non-local calls
+                    "tms1287036",	#Checking any StrShkn Attestation_Verstat OMs NOT to be pegged for local call
+                    "tms1287037",	#Checking any StrShkn Verstat OMs NOT to be pegged for non-local calls if verstat value is built by core
                 );
 
 ############################### Run Test #####################################
-# sub runTests {
-#     unless ( &configured ) {
-#         $logger->error(__PACKAGE__ . ": Could not configure for test suite ".__PACKAGE__); 
-#         return 0;
-#     }
-
-#     $logger->debug(__PACKAGE__ . " ======: before Opening Harness");
-#     my $harness;
-#     unless($harness = SonusQA::HARNESS->new( -suite => __PACKAGE__, -release => "$TESTSUITE->{TESTED_RELEASE}", -variant => $TESTSUITE->{TESTED_VARIANT}, -build => $TESTSUITE->{BUILD_VERSION}, -path => "ats_repos/test/setup/work")){ # Use this for real SBX Hardware.
-#         $logger->error(__PACKAGE__ . ": Could not create harness object");
-#         return 0;
-#     }
-#     $logger->debug(__PACKAGE__ . " ======: Opened Harness");  
-
-#     my $baseUrl = "http://10.1.0.75:3000";
-#     my %args = (-baseUrl => $baseUrl, -username => 'ntluan2', -password => '12345678a@A');
-#     unless($token = (SonusQA::HARNESS::login(%args))){
-#         $logger->error(__PACKAGE__ . ": Failed to Login Analytic page");
-#         return 0;
-#     }
-# 	$logger->debug(__PACKAGE__ . ": token ===  : $token");
-#     my @tests_to_run;
-
-#     # If an array is passed in use that. If not run every test.
-#     if ( @_ ) {
-#         @tests_to_run = @_;
-#     }
-#     else {
-#         @tests_to_run = @TESTCASES;
-#     }
-
-# 	# Add testsuite 
-# 	%args = (-token => $token, -baseUrl => $baseUrl, -projectId => $projectId, -source => "QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19_SV", 
-# 				-testsuiteName => 'SHAKEN19_SV', -executionDate => $executionDate, -totalTCs => scalar @tests_to_run);
-
-# 	unless($testsuiteId = (SonusQA::HARNESS::addTestsuite(%args))) {
-# 		$logger->error(__PACKAGE__ . ": Failed to Add new testsuite 'SHAKEN19_SV'");
-#         return 0;
-# 	}   
-# 	my %testcaseInfo = (-token => $token,-baseUrl => $baseUrl, -testsuiteId => $testsuiteId);
-#     $harness->{SUBROUTINE}= 1;    
-#     $harness->runTestsinSuite( \@tests_to_run, \%testcaseInfo);
-# }
-
 sub runTests {
     unless ( &configured ) {
         $logger->error(__PACKAGE__ . ": Could not configure for test suite ".__PACKAGE__); 
@@ -539,6 +502,7 @@ sub runTests {
         return 0;
     }
     $logger->debug(__PACKAGE__ . " ======: Opened Harness");  
+
     my @tests_to_run;
 
     # If an array is passed in use that. If not run every test.
@@ -548,10 +512,54 @@ sub runTests {
     else {
         @tests_to_run = @TESTCASES;
     }
+    #Login to get token
+    my $baseUrl = "http://10.1.0.75:3000";
+    my %args = (-baseUrl => $baseUrl, -username => 'ntluan2', -password => '12345678a@A');
+    unless($token = (SonusQA::HARNESS::login(%args))){
+        $logger->error(__PACKAGE__ . ": Failed to Login Analytic page");
+        return 0;
+    }
+	$logger->debug(__PACKAGE__ . ": token ===  : $token");
 
+	# Add testsuite 
+	%args = (-token => $token, -baseUrl => $baseUrl, -projectId => $projectId, -source => "QATEST::C20_EO::Luan::Automation_ATS::SHAKEN19_SV", 
+				-testsuiteName => 'SHAKEN19_SV', -executionDate => $executionDate, -totalTCs => scalar @tests_to_run);
+
+	unless($testsuiteId = (SonusQA::HARNESS::addTestsuite(%args))) {
+		$logger->error(__PACKAGE__ . ": Failed to Add new testsuite 'SHAKEN19_SV'");
+        return 0;
+	}   
+	my %testcaseInfo = (-token => $token,-baseUrl => $baseUrl, -testsuiteId => $testsuiteId);
     $harness->{SUBROUTINE}= 1;    
-    $harness->runTestsinSuite( @tests_to_run );
+    $harness->runTestsinSuite( \@tests_to_run, \%testcaseInfo);
 }
+
+# sub runTests {
+#     unless ( &configured ) {
+#         $logger->error(__PACKAGE__ . ": Could not configure for test suite ".__PACKAGE__); 
+#         return 0;
+#     }
+
+#     $logger->debug(__PACKAGE__ . " ======: before Opening Harness");
+#     my $harness;
+#     unless($harness = SonusQA::HARNESS->new( -suite => __PACKAGE__, -release => "$TESTSUITE->{TESTED_RELEASE}", -variant => $TESTSUITE->{TESTED_VARIANT}, -build => $TESTSUITE->{BUILD_VERSION}, -path => "ats_repos/test/setup/work")){ # Use this for real SBX Hardware.
+#         $logger->error(__PACKAGE__ . ": Could not create harness object");
+#         return 0;
+#     }
+#     $logger->debug(__PACKAGE__ . " ======: Opened Harness");  
+#     my @tests_to_run;
+
+#     # If an array is passed in use that. If not run every test.
+#     if ( @_ ) {
+#         @tests_to_run = @_;
+#     }
+#     else {
+#         @tests_to_run = @TESTCASES;
+#     }
+
+#     $harness->{SUBROUTINE}= 1;    
+#     $harness->runTestsinSuite( @tests_to_run );
+# }
 
 ##################################################################################
 # +------------------------------------------------------------------------------+
@@ -1030,7 +1038,9 @@ sub tms1287009 { #After restart warm, checking the OFCVAR Options
         goto CLEANUP;
     }
     $ses_core->execCmd("sosAgent vca show VCA");
-    sleep (800);
+    
+    $logger->debug(__PACKAGE__ . ".$tcid: Wait 600s for sosAgent vca show VCA in-sync");
+    sleep (600);
     $ses_core->{conn}->print("cli");
     if($ses_core->{conn}->waitfor(-match => '/>/', -timeout => 10)){
             print FH "STEP: Go to CLI - PASS\n"; 
@@ -1963,30 +1973,30 @@ sub tms1287013 { #Verifying verstat parameter to be sent properly from Local Lin
     &table_ofcvar_default();
     $result = &cha_table_ofcvar("STRSHKN_Verstat_Mapping","PASS PASS PASS");
 
-# # Check Trunk status
-#     my $idl_num;
-#     foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
-#         $idl_num = 0;
-#         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
-#         foreach (@output) {
-#             if (/tk_idle .* (\d+)/) {
-#                 $idl_num = $1;
-#                 last;
-#             }
-#         }
-#         unless ($idl_num) {
-#             $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
-#             print FH "STEP: Check trunk $_ status - FAIL\n";
-#             $flag = 0;
-#             last;
-#         } else {
-#             print FH "STEP: Check trunk $_ status- PASS\n";
-#         }
-#     }
-#     unless ($flag) {
-#         $result = 0;
-#         goto CLEANUP;
-#     }
+# Check Trunk status
+    my $idl_num;
+    foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
+        $idl_num = 0;
+        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+        foreach (@output) {
+            if (/tk_idle .* (\d+)/) {
+                $idl_num = $1;
+                last;
+            }
+        }
+        unless ($idl_num) {
+            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+            print FH "STEP: Check trunk $_ status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check trunk $_ status- PASS\n";
+        }
+    }
+    unless ($flag) {
+        $result = 0;
+        goto CLEANUP;
+    }
 # Initialize Call
     %input = (
                 -cas_server => [@cas_server],
@@ -2621,30 +2631,30 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
         print FH "STEP: change PRFXDIGS 775 of G6VZSTSPRINT2W - PASS\n";
     }
     my $ofrt_config = 1;
-# # Check Trunk status
-#     my $idl_num;
-#     foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
-#         $idl_num = 0;
-#         @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
-#         foreach (@output) {
-#             if (/tk_idle .* (\d+)/) {
-#                 $idl_num = $1;
-#                 last;
-#             }
-#         }
-#         unless ($idl_num) {
-#             $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
-#             print FH "STEP: Check trunk $_ status - FAIL\n";
-#             $flag = 0;
-#             last;
-#         } else {
-#             print FH "STEP: Check trunk $_ status- PASS\n";
-#         }
-#     }
-#     unless ($flag) {
-#         $result = 0;
-#         goto CLEANUP;
-#     }
+# Check Trunk status
+    my $idl_num;
+    foreach ($db_trunk{'t15_sst'}{-clli},$db_trunk{'t15_bpx'}{-clli}) {
+        $idl_num = 0;
+        @output = $ses_core->execTRKCI(-cmd => 'TD', -nextParameter => $_);
+        foreach (@output) {
+            if (/tk_idle .* (\d+)/) {
+                $idl_num = $1;
+                last;
+            }
+        }
+        unless ($idl_num) {
+            $logger->error(__PACKAGE__ . " $tcid: number of IDL member of trunk $_ is less than 1");
+            print FH "STEP: Check trunk $_ status - FAIL\n";
+            $flag = 0;
+            last;
+        } else {
+            print FH "STEP: Check trunk $_ status- PASS\n";
+        }
+    }
+    unless ($flag) {
+        $result = 0;
+        goto CLEANUP;
+    }
 # Initialize Call
     %input = (
                 -cas_server => [@cas_server],
@@ -3828,7 +3838,7 @@ sub tms1287019 { #Callp service - CFU forward to SIP line via SST trunk
     unless($ses_glcas->offhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . ": Cannot offhook line $list_line[1]");
     }
-    my $dialed_num = '*' . $cfu_acc . $list_dn[2] . '#';
+    $dialed_num = '*' . $cfu_acc . $list_dn[2] . '#';
     %input = (
                 -line_port => $list_line[1],
                 -dialed_number => $dialed_num,
@@ -6609,23 +6619,23 @@ sub tms1287026 { #Callp service - CWT verify call waiting from SIP line via SST 
         print FH "STEP: A dials $dialed_num - PASS\n";
     }
     sleep(2);
-# # Check Ringback tone line A
-#     %input = (
-#                 -line_port => $list_line[0], 
-#                 -freq1 => 450,
-#                 -freq2 => 400,
-#                 -tone_duration => 100,
-#                 -cas_timeout => 50000, 
-#                 -wait_for_event_time => $wait_for_event_time,
-#                 );
-#     unless ($ses_glcas->detectSpecifiedToneCAS(%input)) {
-#         $logger->error(__PACKAGE__ . ".$tcid: cannot detect ringback tone line $list_dn[0]");
-#         print FH "STEP: A hear ringback tone - FAIL\n";
-#         $result = 0;
-#         goto CLEANUP;
-#     } else {
-#         print FH "STEP: A hear ringback tone - PASS\n";
-#     }
+# Check Ringback tone line A
+    %input = (
+                -line_port => $list_line[0], 
+                -freq1 => 450,
+                -freq2 => 400,
+                -tone_duration => 100,
+                -cas_timeout => 50000, 
+                -wait_for_event_time => $wait_for_event_time,
+                );
+    unless ($ses_glcas->detectSpecifiedToneCAS(%input)) {
+        $logger->error(__PACKAGE__ . ".$tcid: cannot detect ringback tone line $list_dn[0]");
+        print FH "STEP: A hear ringback tone - FAIL\n";
+        $result = 0;
+        goto CLEANUP;
+    } else {
+        print FH "STEP: A hear ringback tone - PASS\n";
+    }
 # B flash to answer A
     %input = (
                 -line_port => $list_line[1], 
@@ -8608,7 +8618,7 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
 # start Calltrak 
     %input = (-traceType => 'msgtrace', 
               -trunkName => [$db_trunk{'t15_sst'}{-clli}], 
-              -dialedNumber => [$list_dn[0],$list_dn[2]]); 
+              -dialedNumber => [$list_dn[0],$list_dn[2]],$list_dn[1]); 
     unless ($ses_calltrak->startCalltrak(%input)) {
         $logger->error(__PACKAGE__ . " $tcid: Cannot start Calltrak");
         print FH "STEP: start Calltrak - FAIL\n";
