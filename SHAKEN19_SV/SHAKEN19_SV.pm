@@ -1764,6 +1764,7 @@ sub tms1287012 { #Verifying verstat parameter to be sent properly from Local Lin
         print FH "STEP: A calls B via SST - PASS\n";
     }
 # Detect Sip Line Ring
+    $flag = 1;
 	for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
@@ -2358,7 +2359,8 @@ sub tms1287014 { #Verifying verstat parameter to be sent properly from PRI to SI
         print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
             sleep (2);
@@ -2687,7 +2689,8 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
         print FH "STEP: A calls B via Pri to SST - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
             sleep (2);
@@ -3821,7 +3824,8 @@ sub tms1287019 { #Callp service - CFU forward to SIP line via SST trunk
         print FH "STEP: A calls B via SST  fw to C - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
             sleep (2);
@@ -4185,7 +4189,8 @@ sub tms1287020 { #Callp service - CXR tranfer to SIP line via SST trunk
         print FH "STEP: Onhook line B - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
             sleep (2);
@@ -4519,7 +4524,8 @@ sub tms1287021 { #Callp service - Callp service - CFB forward to SIP line via SS
         print FH "STEP: A calls B via SST  fw to C - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
             sleep (2);
@@ -4860,7 +4866,8 @@ sub tms1287022 { #Callp service - Callp service - CFD forward to SIP line via SS
         print FH "STEP: A calls B via SST ;B does't answers - PASS\n";
     }
 # Detect C rings after timeout of CFD
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
             sleep (2);
@@ -5293,7 +5300,8 @@ sub tms1287023 { #Callp service - SCL call to SIP line via SST trunk
         print FH "STEP: A dials SPDC code + NN and check speech path between line A and B - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
             sleep (2);
@@ -5728,7 +5736,8 @@ sub tms1287024 { #Callp service - SCS call to SIP line via SST trunk
         print FH "STEP: A dials SPDC code + N and check speech path between line A and B - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
             sleep (2);
@@ -6140,15 +6149,21 @@ sub tms1287025 { #Callp service - CHD hold a call and make a new call to SIP lin
         print FH "STEP: B dials C - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line C not ringing");
+        print FH "STEP: Check line $list_dn[2] status CPB - FAILED\n";
+    }
 # Onhook B
     unless($ses_glcas->onhookCAS(-line_port => $list_line[1], -wait_for_event_time => $wait_for_event_time)) {
         $logger->error(__PACKAGE__ . ": Cannot onhook line $list_line[1]");
@@ -7355,7 +7370,8 @@ sub tms1287028 { #Callp service - 1FR line make a basic call via SST trunk
         print FH "STEP: A calls B via SST - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
             sleep (2);
@@ -8624,7 +8640,8 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
         print FH "STEP: A calls B  - PASS\n";
     }
 # Detect Sip Line Ring
-	for (my $i = 0; $i <= 10; $i++){
+	$flag = 1;	
+    for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[2])) {
         $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
             sleep (2);
@@ -9380,7 +9397,7 @@ sub tms1287035 { #Checking StrShkn Verstat OMs to be pegged properly for non-loc
 # omshow STRSHKN active
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
+    foreach(@output){
         if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
@@ -9417,7 +9434,7 @@ sub tms1287035 { #Checking StrShkn Verstat OMs to be pegged properly for non-loc
     }
 # omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
+    foreach(@output){
         if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
