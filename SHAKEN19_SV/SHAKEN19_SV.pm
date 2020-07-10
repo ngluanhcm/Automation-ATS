@@ -787,6 +787,7 @@ sub TC0 {
 			$ses_core->execCmd("del $1 ");
             $ses_core->execCmd("y");
             print FH "STEP: del $1 - Pass\n";
+            last;
         }
     }		
     my $TRKOPTS_config = 1;
@@ -801,6 +802,7 @@ sub TC0 {
 			$ses_core->execCmd("del");
             $ses_core->execCmd("y");
             print FH "STEP: del $1 - Pass\n";
+            last;
         }
     }		
     my $LTDATA_config = 1;
@@ -1764,14 +1766,19 @@ sub tms1287012 { #Verifying verstat parameter to be sent properly from Local Lin
 # Detect Sip Line Ring
 	for (my $i = 0; $i <= 10; $i++){
         unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
-        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line C ringing");
+        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
     sleep(2);
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line B not ringing");
+        print FH "STEP: Check line $list_dn[1] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -2027,16 +2034,6 @@ sub tms1287013 { #Verifying verstat parameter to be sent properly from Local Lin
     } else {
         print FH "STEP: A calls B via SST - PASS\n";
     }
-# Detect C rings after timeout of CFD
-	for (my $i = 0; $i <= 10; $i++){
-        unless (grep /CPB/, $ses_core->coreLineGetStatus($list_dn[1])) {
-        $logger->debug(__PACKAGE__ . " $tcid: Waiting for line B ringing");
-            sleep (2);
-        } else {
-            print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
-            last;
-        }
-	}
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -2367,10 +2364,14 @@ sub tms1287014 { #Verifying verstat parameter to be sent properly from PRI to SI
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
-
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line B not ringing");
+        print FH "STEP: Check line $list_dn[1] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -2692,9 +2693,14 @@ sub tms1287015 { #Verifying verstat parameter to be sent properly from PRI to SI
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line B not ringing");
+        print FH "STEP: Check line $list_dn[1] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -3457,36 +3463,22 @@ sub tms1287018 { #Callp service - 3WC join conference via SST
     } else {
         print FH "STEP: A calls C via SST and A flash - PASS\n";
     }
-# Check speech path between A and B
+# Check speech path among A, B, C
     %input = (
-                -list_port => [$list_line[0],$list_line[1]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
+                -list_port => [$list_line[0],$list_line[1],$list_line[2]], 
+                -checking_type => ['TESTTONE'], 
+                -tone_duration => 1000, 
                 -cas_timeout => 50000
              );
     unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and C ");
-        print FH "STEP: check speech path between A and B - FAIL\n";
+        $logger->error(__PACKAGE__ . " $tcid: Failed to Check speech path among A, B, C");
+        print FH "STEP: Check speech path among A, B, C - FAIL\n";
         $result = 0;
         goto CLEANUP;
     } else {
-        print FH "STEP: check speech path between A and B - PASS\n";
+        print FH "STEP: Check speech path among A, B, C - PASS\n";
     }
-# Check speech path between A and C
-    %input = (
-                -list_port => [$list_line[0],$list_line[2]], 
-                -checking_type => ['TESTTONE','DIGITS'], 
-                -tone_duration => 2000, 
-                -cas_timeout => 50000
-             );
-    unless ($ses_glcas->checkSpeechPathCAS(%input)) {
-        $logger->error(__PACKAGE__ . " $tcid: Failed at checking speech path between A and C ");
-        print FH "STEP: check speech path between A and C - FAIL\n";
-        $result = 0;
-        goto CLEANUP;
-    } else {
-        print FH "STEP: check speech path between A and C - PASS\n";
-    }
+
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -3835,11 +3827,15 @@ sub tms1287019 { #Callp service - CFU forward to SIP line via SST trunk
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line C not ringing");
+        print FH "STEP: Check line $list_dn[2] status CPB - FAILED\n";
+    }
 
-    
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -4195,9 +4191,14 @@ sub tms1287020 { #Callp service - CXR tranfer to SIP line via SST trunk
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}    
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line C not ringing");
+        print FH "STEP: Check line $list_dn[2] status CPB - FAILED\n";
+    }
     sleep(5);
 
 # Stop CallTrak
@@ -4524,9 +4525,14 @@ sub tms1287021 { #Callp service - Callp service - CFB forward to SIP line via SS
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
-	}    
+	}  
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line C not ringing");
+        print FH "STEP: Check line $list_dn[2] status CPB - FAILED\n";
+    }  
     sleep(5);
 # Stop CallTrak
     if ($calltrak_start) {
@@ -4860,9 +4866,14 @@ sub tms1287022 { #Callp service - Callp service - CFD forward to SIP line via SS
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line C not ringing");
+        print FH "STEP: Check line $list_dn[2] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -5288,9 +5299,14 @@ sub tms1287023 { #Callp service - SCL call to SIP line via SST trunk
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line B not ringing");
+        print FH "STEP: Check line $list_dn[1] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -5718,9 +5734,14 @@ sub tms1287024 { #Callp service - SCS call to SIP line via SST trunk
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line B not ringing");
+        print FH "STEP: Check line $list_dn[1] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -7340,9 +7361,14 @@ sub tms1287028 { #Callp service - 1FR line make a basic call via SST trunk
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[1] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line B not ringing");
+        print FH "STEP: Check line $list_dn[1] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -8604,10 +8630,14 @@ sub tms1287031 { #Callp service - Simring make a call via SST trunk
             sleep (2);
         } else {
             print FH "STEP: Check line $list_dn[2] status CPB - PASS\n";
+            $flag = 0;
             last;
         }
 	}
-
+    if($flag){
+        $logger->error(__PACKAGE__ . " $tcid: Line C not ringing");
+        print FH "STEP: Check line $list_dn[2] status CPB - FAILED\n";
+    }
 # Stop CallTrak
     if ($calltrak_start) {
         unless (@callTrakLogs = $ses_calltrak->stopCalltrak()) {
@@ -9670,7 +9700,7 @@ sub tms1287036 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
 # omshow STRSHKN active
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
+    foreach(@output){
         if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
@@ -9707,7 +9737,7 @@ sub tms1287036 { #Checking any StrShkn Attestation_Verstat OMs NOT to be pegged 
     }
 # omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
+    foreach(@output){
         if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
@@ -9990,7 +10020,7 @@ sub tms1287037 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
 # omshow STRSHKN active
     $ses_core->{conn}->prompt('/\>/');
     my @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
+    foreach(@output){
         if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived");
             print FH "STEP: omshow STRSHKN active - PASS\n";
@@ -10027,7 +10057,7 @@ sub tms1287037 { #Checking any StrShkn Verstat OMs NOT to be pegged for non-loca
     }
 # omshow STRSHKN active
     @output = $ses_core->execCmd("omshow STRSHKN active");
-    for(@output){
+    foreach(@output){
         if ( /(\d+)\s+\d+\s+/) {
             $logger->error(__PACKAGE__ . " $tcid: cmd omshow STRSHKN actived check");
             print FH "STEP: omshow STRSHKN active check - PASS\n";
